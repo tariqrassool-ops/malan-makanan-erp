@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malan Makanan — Operations</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f1f3f7;
+  --panel:#ffffff;
+  --panel-2:#f6f7fa;
+  --border:#e1e4ea;
+  --text:#1f2430;
+  --text-dim:#5b6170;
+  --text-faint:#8a8f9c;
+  --accent:#c97a2e;
+  --accent-light:#e8923f;
+  --accent-soft:#fbe9d6;
+  --good:#268a4e;
+  --good-soft:#e3f5ea;
+  --warn:#b8841a;
+  --warn-soft:#fbf0d9;
+  --bad:#c4422e;
+  --bad-soft:#fbe7e3;
+  --radius:7px;
+  --font-display:'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-display);
+  font-size:13.5px;
+  line-height:1.45;
+  height:100vh;
+  overflow:hidden;
+}
+#app{display:flex;height:100vh;}
+
+#sidebar{
+  width:222px;
+  flex-shrink:0;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  padding:16px 0;
+}
+.brand{padding:0 16px 16px 16px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.brand-mark{font-family:var(--font-mono);font-size:11px;letter-spacing:0.12em;color:var(--accent);text-transform:uppercase;}
+.brand-name{font-size:16px;font-weight:700;margin-top:2px;}
+.brand-sub{font-size:11px;color:var(--text-faint);margin-top:1px;}
+.nav-section{margin-top:10px;}
+.nav-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);padding:6px 16px 4px 16px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;color:var(--text-dim);cursor:pointer;font-size:13px;font-weight:500;border-left:2px solid transparent;transition:background .12s, color .12s;}
+.nav-item:hover{background:var(--panel-2);color:var(--text);}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);border-left:2px solid var(--accent);}
+.nav-icon{width:15px;text-align:center;opacity:0.85;font-size:13px;}
+.sidebar-footer{margin-top:auto;padding:12px 16px 0 16px;border-top:1px solid var(--border);}
+.role-select{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:6px 8px;border-radius:var(--radius);font-family:var(--font-display);}
+
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{height:54px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;background:var(--panel);}
+#topbar h1{font-size:15px;font-weight:600;}
+#topbar .meta{font-size:11.5px;color:var(--text-faint);font-family:var(--font-mono);}
+#content{flex:1;overflow-y:auto;padding:24px;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-bottom:22px;}
+.kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:0 1px 2px rgba(20,20,40,0.03);}
+.kpi-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;font-family:var(--font-mono);}
+.kpi-value{font-size:21px;font-weight:700;margin-top:6px;font-family:var(--font-mono);}
+.kpi-card.alert .kpi-value{color:var(--warn);}
+.kpi-card.danger .kpi-value{color:var(--bad);}
+.kpi-card.positive .kpi-value{color:var(--good);}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,40,0.03);}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.panel-head h2{font-size:13px;font-weight:600;}
+.panel-head .sub{font-size:11px;color:var(--text-faint);margin-top:2px;}
+.panel-body{padding:16px;}
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;}
+
+.btn{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:var(--radius);font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font-display);}
+.btn:hover{background:var(--accent-light);}
+.btn.secondary{background:var(--panel);color:var(--text-dim);border:1px solid var(--border);}
+.btn.secondary:hover{color:var(--text);border-color:var(--text-faint);}
+.btn.small{padding:4px 9px;font-size:11.5px;}
+.btn.danger{background:var(--bad);color:#fff;}
+.btn.ghost{background:transparent;color:var(--text-faint);border:1px solid var(--border);}
+.btn.ghost:hover{color:var(--text);}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-faint);font-family:var(--font-mono);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border);background:var(--panel-2);}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);}
+tbody tr:hover{background:var(--panel-2);}
+tbody tr:last-child td{border-bottom:none;}
+td.num, th.num{text-align:right;font-family:var(--font-mono);}
+.row-actions{display:flex;gap:6px;justify-content:flex-end;}
+
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:10px;font-family:var(--font-mono);}
+.pill.good{background:var(--good-soft);color:var(--good);}
+.pill.warn{background:var(--warn-soft);color:var(--warn);}
+.pill.bad{background:var(--bad-soft);color:var(--bad);}
+.pill.neutral{background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border);}
+
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.toolbar input, .toolbar select{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--radius);font-size:12.5px;font-family:var(--font-display);}
+.toolbar input::placeholder{color:var(--text-faint);}
+.spacer{flex:1;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-faint);font-size:12.5px;}
+.muted{color:var(--text-faint);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(20,22,30,0.45);display:none;align-items:center;justify-content:center;z-index:50;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 30px rgba(20,20,40,0.15);}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--panel);}
+.modal-head h3{font-size:14px;font-weight:600;}
+.modal-close{cursor:pointer;color:var(--text-faint);font-size:16px;}
+.modal-body{padding:18px;}
+.form-row{margin-bottom:12px;}
+.form-row label{display:block;font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;font-family:var(--font-mono);}
+.form-row input, .form-row select, .form-row textarea{width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:var(--radius);font-size:13px;font-family:var(--font-display);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-foot{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--panel);}
+.warn-banner{background:var(--warn-soft);border:1px solid #ecd9a3;color:var(--warn);padding:8px 12px;border-radius:var(--radius);font-size:12px;margin-bottom:12px;}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);font-family:var(--font-mono);margin:16px 0 8px 0;display:flex;justify-content:space-between;align-items:center;}
+.chart-wrap{position:relative;height:230px;}
+.access-denied{padding:60px 20px;text-align:center;color:var(--text-faint);}
+.access-denied h2{color:var(--text);font-size:16px;margin-bottom:8px;}
+.subtable{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;}
+.subtable table{font-size:12px;}
+.subtable thead th{background:transparent;}
+.balance-box{display:flex;justify-content:space-between;align-items:center;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;}
+.balance-box .amt{font-family:var(--font-mono);font-weight:700;font-size:16px;}
+.mini-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:end;margin-bottom:10px;}
+.mini-form .form-row{margin-bottom:0;}
+.bom-row{display:grid;grid-template-columns:1fr 100px 80px auto;gap:6px;align-items:end;margin-bottom:8px;}
+.tier-row{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end;margin-bottom:8px;}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#d4d7de;border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">ERP / Internal</div>
+      <div class="brand-name">Malan Makanan</div>
+      <div class="brand-sub">Dessert Mfg &amp; Distribution</div>
+    </div>
+    <div class="nav-section" id="navContainer"></div>
+    <div class="sidebar-footer">
+      <select class="role-select" id="roleSelect" onchange="setRole(this.value)">
+        <option value="owner">Business Owner</option>
+        <option value="production">Production Staff</option>
+        <option value="inventory">Inventory Manager</option>
+        <option value="distribution">Sales Staff</option>
+        <option value="finance">Finance Staff</option>
+      </select>
+    </div>
+  </div>
+  <div id="main">
+    <div id="topbar">
+      <h1 id="pageTitle">Dashboard</h1>
+      <div class="meta" id="topMeta"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBox"></div></div>
+
+<script>
+/* ============================================================
+   MALAN MAKANAN ERP — FRONTEND
+   In-memory + localStorage data layer. Every read/write funnels
+   through DATA.api so swapping to a real backend (Google Sheets via
+   Apps Script) later only requires rewriting the bodies of DATA.api
+   methods — no view code changes.
+   ============================================================ */
+
+const fmt = n => 'Rs. ' + Number(n||0).toLocaleString('en-LK', {maximumFractionDigits:0});
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = (p) => p + '-' + Math.random().toString(36).slice(2,8);
+
+/* ---------------- DATA STORE ---------------- */
+const STORAGE_KEY = 'malan_makanan_erp_data_v2';
+let DB = {
+  items: [],            // unified catalog: simple | finished | non_inventory
+  shops: [],             // customers/shops
+  purchases: [],         // {..., payments:[], returns:[]}
+  sales: [],              // {..., payments:[], returns:[]}
+  production_batches: [],
+};
+
+function loadFromStorage(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) DB = JSON.parse(raw); }
+  catch(e){ console.warn('Could not load saved data', e); }
+}
+function saveToStorage(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+  catch(e){ console.warn('Could not save data', e); }
+}
+loadFromStorage();
+
+/* ---------------- STOCK CALCULATION ---------------- */
+function stockOf(itemId){
+  let stock = 0;
+  DB.purchases.forEach(p=>{
+    if(p.item_id===itemId){
+      stock += Number(p.qty);
+      (p.returns||[]).forEach(r=> stock -= Number(r.qty));
+    }
+  });
+  DB.production_batches.forEach(b=>{
+    if(b.item_id===itemId) stock += Number(b.qty_produced);
+    (b.consumed||[]).forEach(c=>{ if(c.item_id===itemId) stock -= Number(c.qty); });
+  });
+  DB.sales.forEach(s=>{
+    if(s.item_id===itemId){
+      stock -= Number(s.qty);
+      (s.returns||[]).forEach(r=>{ if(r.restock) stock += Number(r.qty); });
+    }
+  });
+  return stock;
+}
+function purchaseBalance(p){
+  const paid = (p.payments||[]).reduce((s,x)=>s+Number(x.amount),0);
+  const retImpact = (p.returns||[]).reduce((s,x)=>s+Number(x.cost_impact||0),0);
+  return p.total_cost - paid - retImpact;
+}
+function saleBalance(s){
+  const paid = (s.payments||[]).reduce((sum,x)=>sum+Number(x.amount),0);
+  const retImpact = (s.returns||[]).reduce((sum,x)=>sum+Number(x.cost_impact||0),0);
+  return s.total_value - paid - retImpact;
+}
+function shopBalance(shopId){
+  return DB.sales.filter(s=>s.shop_id===shopId).reduce((sum,s)=>sum+saleBalance(s),0);
+}
+
+/* ---------------- DATA API (swap point for real backend) ---------------- */
+const DATA = {
+  api: {
+    getItems: () => DB.items,
+    getShops: () => DB.shops,
+    getPurchases: () => DB.purchases,
+    getSales: () => DB.sales,
+    getBatches: () => DB.production_batches,
+
+    createItem: (it) => { it.id = uid('IT'); DB.items.push(it); return it; },
+    updateItem: (id, fields) => { Object.assign(DB.items.find(i=>i.id===id), fields); },
+    deleteItem: (id) => { DB.items = DB.items.filter(i=>i.id!==id); },
+
+    createShop: (s) => { s.id = uid('S'); DB.shops.push(s); return s; },
+    updateShop: (id, fields) => { Object.assign(DB.shops.find(s=>s.id===id), fields); },
+    deleteShop: (id) => { DB.shops = DB.shops.filter(s=>s.id!==id); },
+
+    createPurchase: (p) => {
+      p.id = uid('PU'); p.total_cost = Number(p.qty)*Number(p.unit_cost);
+      p.payments = []; p.returns = [];
+      DB.purchases.push(p); return p;
+    },
+    updatePurchase: (id, fields) => {
+      const p = DB.purchases.find(x=>x.id===id);
+      Object.assign(p, fields);
+      p.total_cost = Number(p.qty)*Number(p.unit_cost);
+    },
+    deletePurchase: (id) => { DB.purchases = DB.purchases.filter(p=>p.id!==id); },
+    addPurchasePayment: (id, payment) => { payment.id = uid('PAY'); DB.purchases.find(p=>p.id===id).payments.push(payment); },
+    addPurchaseReturn: (id, ret) => { ret.id = uid('RET'); DB.purchases.find(p=>p.id===id).returns.push(ret); },
+
+    createSale: (s) => {
+      s.id = uid('SA');
+      const item = DB.items.find(i=>i.id===s.item_id);
+      s.unit_price = Number(s.unit_price);
+      s.total_value = Number(s.qty)*s.unit_price;
+      s.payments = []; s.returns = [];
+      DB.sales.push(s); return s;
+    },
+    updateSale: (id, fields) => {
+      const s = DB.sales.find(x=>x.id===id);
+      Object.assign(s, fields);
+      s.total_value = Number(s.qty)*Number(s.unit_price);
+    },
+    deleteSale: (id) => { DB.sales = DB.sales.filter(s=>s.id!==id); },
+    addSalePayment: (id, payment) => { payment.id = uid('PAY'); DB.sales.find(s=>s.id===id).payments.push(payment); },
+    addSaleReturn: (id, ret) => { ret.id = uid('RET'); DB.sales.find(s=>s.id===id).returns.push(ret); },
+
+    createProductionBatch: (batch) => {
+      const item = DB.items.find(i=>i.id===batch.item_id);
+      const batchSize = Number(item.batch_size)||100;
+      const multiplier = Number(batch.qty_produced)/batchSize;
+      const bom = item.bom||[];
+      let shortfalls = [];
+      bom.forEach(line=>{
+        const need = Number(line.qty_per_batch)*multiplier;
+        const have = stockOf(line.ingredient_item_id);
+        if(have < need) shortfalls.push({ingredient_item_id:line.ingredient_item_id, need, have});
+      });
+      if(shortfalls.length && !batch.override) return {ok:false, shortfalls};
+      batch.id = uid('B');
+      batch.stock_override = shortfalls.length>0;
+      batch.expiry_date = item.shelf_life_days ? addDays(batch.date, Number(item.shelf_life_days)) : null;
+      let ingredientCost = 0;
+      batch.consumed = bom.map(line=>{
+        const qty = Number(line.qty_per_batch)*multiplier;
+        const ing = DB.items.find(i=>i.id===line.ingredient_item_id);
+        ingredientCost += qty*Number(ing.avg_cost||0);
+        return {item_id: line.ingredient_item_id, qty, unit_cost: ing.avg_cost||0};
+      });
+      batch.ingredient_cost = ingredientCost;
+      batch.total_cost = ingredientCost + Number(batch.packaging_cost||0) + Number(batch.gas_cost||0) + Number(batch.labor_cost||0);
+      batch.unit_cost = batch.total_cost / Number(batch.qty_produced);
+      DB.production_batches.push(batch);
+      return {ok:true, batch};
+    },
+    deleteBatch: (id) => { DB.production_batches = DB.production_batches.filter(b=>b.id!==id); },
+  }
+};
+function addDays(dateStr, n){ const d = new Date(dateStr); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+/* ---------------- ROLES & NAV ---------------- */
+const ROLES = {
+  owner:        {label:'Business Owner', modules:['dashboard','items','shops','purchases','production','sales','availability','reports','settings']},
+  production:   {label:'Production Staff', modules:['dashboard','production','items']},
+  inventory:    {label:'Inventory Manager', modules:['dashboard','items','purchases','availability']},
+  distribution: {label:'Sales Staff', modules:['dashboard','sales','shops','availability']},
+  finance:      {label:'Finance Staff', modules:['dashboard','purchases','sales','reports']},
+};
+let currentRole = 'owner';
+
+const NAV = [
+  {section:'Overview', items:[ {id:'dashboard', label:'Dashboard', icon:'◆'} ]},
+  {section:'Catalog', items:[
+    {id:'items', label:'Items', icon:'▢'},
+    {id:'shops', label:'Shops', icon:'⌂'},
+  ]},
+  {section:'Operations', items:[
+    {id:'purchases', label:'Purchases', icon:'▥'},
+    {id:'production', label:'Production', icon:'▣'},
+    {id:'sales', label:'Sales', icon:'▶'},
+  ]},
+  {section:'Insights', items:[
+    {id:'availability', label:'Availability', icon:'◫'},
+    {id:'reports', label:'Reports', icon:'▤'},
+    {id:'settings', label:'Settings', icon:'⚙'},
+  ]},
+];
+let currentView = 'dashboard';
+
+function setRole(role){
+  currentRole = role;
+  if(!ROLES[currentRole].modules.includes(currentView)) currentView = 'dashboard';
+  renderNav(); renderView();
+}
+function renderNav(){
+  const allowed = ROLES[currentRole].modules;
+  document.getElementById('navContainer').innerHTML = NAV.map(sec=>{
+    const items = sec.items.filter(it=>allowed.includes(it.id));
+    if(!items.length) return '';
+    return `<div class="nav-section"><div class="nav-label">${sec.section}</div>
+      ${items.map(it=>`<div class="nav-item ${it.id===currentView?'active':''}" onclick="goTo('${it.id}')"><span class="nav-icon">${it.icon}</span>${it.label}</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+function goTo(view){ currentView = view; renderNav(); renderView(); }
+
+function renderView(){
+  saveToStorage();
+  const titles = {dashboard:'Dashboard', items:'Items', shops:'Shops', purchases:'Purchases', production:'Production', sales:'Sales', availability:'Availability', reports:'Reports', settings:'Settings'};
+  document.getElementById('pageTitle').textContent = titles[currentView] || '';
+  document.getElementById('topMeta').textContent = ROLES[currentRole].label + ' · ' + fmtDate(new Date());
+  const content = document.getElementById('content');
+  if(!ROLES[currentRole].modules.includes(currentView)){
+    content.innerHTML = `<div class="access-denied"><h2>No access</h2><p>${ROLES[currentRole].label} does not have permission to view this module.</p></div>`;
+    return;
+  }
+  const renderers = {dashboard:renderDashboard, items:renderItems, shops:renderShops, purchases:renderPurchases, production:renderProduction, sales:renderSales, availability:renderAvailability, reports:renderReports, settings:renderSettings};
+  content.innerHTML = '';
+  renderers[currentView]();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const items = DATA.api.getItems();
+  const sales = DATA.api.getSales();
+  const purchases = DATA.api.getPurchases();
+  const batches = DATA.api.getBatches();
+  const shops = DATA.api.getShops();
+
+  const revenue = sales.reduce((s,x)=>s+x.total_value,0);
+  const expense = purchases.reduce((s,x)=>s+x.total_cost,0);
+  const profit = revenue - expense;
+  const cashIn = sales.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashOut = purchases.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashPosition = cashIn - cashOut;
+  const receivables = sales.reduce((s,x)=>s+Math.max(saleBalance(x),0),0);
+  const payables = purchases.reduce((s,x)=>s+Math.max(purchaseBalance(x),0),0);
+  const stockItems = items.filter(i=>i.type!=='non_inventory');
+  const invValue = stockItems.reduce((s,i)=>s+stockOf(i.id)*Number(i.avg_cost||0),0);
+  const lowStock = stockItems.filter(i=>i.min_stock && stockOf(i.id) < Number(i.min_stock)).length;
+  const expiringSoon = batches.filter(b=> b.expiry_date && (new Date(b.expiry_date)-new Date())/86400000 <= 7).length;
+  const prodVolume = batches.reduce((s,b)=>s+Number(b.qty_produced),0);
+  const returnsCount = sales.reduce((s,x)=>s+(x.returns||[]).length,0) + purchases.reduce((s,x)=>s+(x.returns||[]).length,0);
+
+  const kpis = [
+    {label:'Revenue', value:fmt(revenue)},
+    {label:'Expense', value:fmt(expense)},
+    {label:'Profit', value:fmt(profit), cls: profit>=0?'positive':'danger'},
+    {label:'Cash Position', value:fmt(cashPosition)},
+    {label:'Receivables (from shops)', value:fmt(receivables), cls: receivables>0?'alert':''},
+    {label:'Payables (to suppliers)', value:fmt(payables), cls: payables>0?'alert':''},
+    {label:'Inventory Value', value:fmt(invValue)},
+    {label:'Low Stock Items', value:lowStock, cls: lowStock>0?'danger':''},
+    {label:'Expiring ≤ 7 Days', value:expiringSoon, cls: expiringSoon>0?'alert':''},
+    {label:'Production Volume', value:prodVolume+' units'},
+    {label:'Returns Logged', value:returnsCount},
+  ];
+
+  let html = `<div class="kpi-grid">` + kpis.map(k=>`<div class="kpi-card ${k.cls||''}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div></div>`).join('') + `</div>`;
+  html += `<div class="two-col">
+    <div class="panel"><div class="panel-head"><h2>Revenue by Shop</h2></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartShopRevenue"></canvas></div></div></div>
+    <div class="panel"><div class="panel-head"><h2>Expiry Watch</h2><div class="sub">Active batches</div></div><div class="panel-body" id="expiryWatch"></div></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h2>Low Stock Alerts</h2></div><div class="panel-body" id="lowStockList"></div></div>`;
+  document.getElementById('content').innerHTML = html;
+
+  const sortedBatches = [...batches].filter(b=>b.expiry_date).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date));
+  document.getElementById('expiryWatch').innerHTML = sortedBatches.length ? sortedBatches.map(b=>{
+    const days = Math.ceil((new Date(b.expiry_date)-new Date())/86400000);
+    const item = items.find(i=>i.id===b.item_id);
+    const risk = days<=3?'bad':days<=7?'warn':'good';
+    return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;"><span>${item?item.name:'—'} <span class="muted">· ${b.batch_number}</span></span><span class="pill ${risk}">${days} day${days===1?'':'s'}</span></div>`;
+  }).join('') : `<div class="empty-state">No active batches with expiry tracking.</div>`;
+
+  const low = stockItems.filter(i=>i.min_stock && stockOf(i.id) < Number(i.min_stock));
+  document.getElementById('lowStockList').innerHTML = low.length ? `<table><thead><tr><th>Item</th><th class="num">Current</th><th class="num">Minimum</th><th>Status</th></tr></thead><tbody>${low.map(i=>`<tr><td>${i.name}</td><td class="num">${stockOf(i.id)} ${i.unit}</td><td class="num">${i.min_stock} ${i.unit}</td><td><span class="pill bad">Reorder</span></td></tr>`).join('')}</tbody></table>` : `<div class="empty-state">All items above minimum stock.</div>`;
+
+  const revByShop = {};
+  sales.forEach(s=>{ revByShop[s.shop_id] = (revByShop[s.shop_id]||0) + s.total_value; });
+  const labels = Object.keys(revByShop).map(id=>{ const sh = shops.find(s=>s.id===id); return sh?sh.name:'—'; });
+  new Chart(document.getElementById('chartShopRevenue'), {
+    type:'bar', data:{labels, datasets:[{label:'Revenue', data:Object.values(revByShop), backgroundColor:'#c97a2e', borderRadius:3}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170',font:{size:10}},grid:{display:false}}, y:{ticks:{color:'#5b6170',font:{size:10}},grid:{color:'#eceef2'}}}}
+  });
+}
+
+/* ---------------- ITEMS (unified catalog) ---------------- */
+function renderItems(){
+  const items = DATA.api.getItems();
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <input type="text" placeholder="Search items..." oninput="filterTable(this.value,'itemsTable')">
+      <select onchange="filterItemsByType(this.value)"><option value="">All Types</option><option value="simple">Simple</option><option value="finished">Finished Good</option><option value="non_inventory">Non-Inventory</option></select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="openItemModal()">+ Add Item</button>
+    </div>
+    <div class="panel">
+      <table id="itemsTable">
+        <thead><tr><th>Name</th><th>Type</th><th>SKU</th><th>Unit</th><th class="num">Stock</th><th class="num">Avg Cost</th><th>Status</th><th></th></tr></thead>
+        <tbody>${items.map(rowItem).join('') || ''}</tbody>
+      </table>
+      ${!items.length ? '<div class="empty-state">No items yet. Add ingredients, finished goods, or expense items.</div>' : ''}
+    </div>`;
+}
+function rowItem(it){
+  const typeLabels = {simple:'Simple', finished:'Finished Good', non_inventory:'Non-Inventory'};
+  const typePill = {simple:'neutral', finished:'good', non_inventory:'warn'};
+  const stock = it.type!=='non_inventory' ? stockOf(it.id) : null;
+  const low = it.min_stock && stock!==null && stock < Number(it.min_stock);
+  return `<tr data-type="${it.type}">
+    <td><strong>${it.name}</strong></td>
+    <td><span class="pill ${typePill[it.type]}">${typeLabels[it.type]}</span></td>
+    <td class="muted">${it.sku||'—'}</td>
+    <td>${it.unit||'—'}</td>
+    <td class="num">${stock!==null ? stock+(low?' ⚠':'') : '—'}</td>
+    <td class="num">${fmt(it.avg_cost||0)}</td>
+    <td><span class="pill ${it.status==='active'?'good':'neutral'}">${it.status}</span></td>
+    <td><div class="row-actions"><button class="btn small secondary" onclick="openItemModal('${it.id}')">Edit</button><button class="btn small danger" onclick="deleteItemConfirm('${it.id}')">Delete</button></div></td>
+  </tr>`;
+}
+function filterItemsByType(type){
+  document.querySelectorAll('#itemsTable tbody tr').forEach(tr=>{ tr.style.display = (!type || tr.dataset.type===type) ? '' : 'none'; });
+}
+function deleteItemConfirm(id){
+  if(confirm('Delete this item? This cannot be undone.')){ DATA.api.deleteItem(id); renderView(); }
+}
+
+let modalState = { bom: [], tiers: [] };
+
+function openItemModal(editId){
+  const editing = editId ? DB.items.find(i=>i.id===editId) : null;
+  modalState.bom = editing ? JSON.parse(JSON.stringify(editing.bom||[])) : [];
+  modalState.tiers = editing ? JSON.parse(JSON.stringify(editing.price_tiers||[])) : [];
+  const simpleItems = DB.items.filter(i=>i.type==='simple' || i.type==='finished');
+
+  const body = `
+    <div class="form-row"><label>Item Name</label><input id="f_name" value="${editing?editing.name:''}" placeholder="e.g. Wattalapam or Sugar"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Item Type</label>
+        <select id="f_type" onchange="toggleItemTypeSections()">
+          <option value="simple" ${editing&&editing.type==='simple'?'selected':''}>Simple (ingredient/material)</option>
+          <option value="finished" ${editing&&editing.type==='finished'?'selected':''}>Finished Good (BOM)</option>
+          <option value="non_inventory" ${editing&&editing.type==='non_inventory'?'selected':''}>Non-Inventory (expense item)</option>
+        </select>
+      </div>
+      <div class="form-row"><label>SKU</label><input id="f_sku" value="${editing?editing.sku||'':''}"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Unit Type</label><input id="f_unit" value="${editing?editing.unit||'':''}" placeholder="kg, pcs, g, ml..."></div>
+      <div class="form-row"><label>Category</label><input id="f_category" value="${editing?editing.category||'':''}"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Minimum Stock</label><input id="f_min" type="number" value="${editing?editing.min_stock||'':''}"></div>
+      <div class="form-row"><label>Average Cost (Rs.)</label><input id="f_cost" type="number" value="${editing?editing.avg_cost||'':''}"></div>
+    </div>
+    <div id="finishedOnlyFields" style="display:none;">
+      <div class="form-grid">
+        <div class="form-row"><label>Standard Batch Size</label><input id="f_batchsize" type="number" value="${editing?editing.batch_size||100:100}"></div>
+        <div class="form-row"><label>Shelf Life (days)</label><input id="f_shelf" type="number" value="${editing?editing.shelf_life_days||'':''}"></div>
+      </div>
+      <div class="section-title">Bill of Materials (per batch)<button class="btn small secondary" onclick="addBomRow()">+ Add Ingredient</button></div>
+      <div id="bomRows"></div>
+    </div>
+    <div id="priceTierSection" style="display:none;">
+      <div class="section-title">Price Tiers<button class="btn small secondary" onclick="addTierRow()">+ Add Tier</button></div>
+      <div id="tierRows"></div>
+    </div>
+    <div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div>
+  `;
+  showModal(editing?'Edit Item':'Add Item', body, () => saveItem(editId));
+  toggleItemTypeSections();
+  renderBomRows(simpleItems);
+  renderTierRows();
+}
+function toggleItemTypeSections(){
+  const type = val('f_type');
+  document.getElementById('finishedOnlyFields').style.display = type==='finished' ? 'block' : 'none';
+  document.getElementById('priceTierSection').style.display = type!=='non_inventory' ? 'block' : 'none';
+}
+function renderBomRows(simpleItems){
+  document.getElementById('bomRows').innerHTML = modalState.bom.map((row,idx)=>`
+    <div class="bom-row">
+      <select onchange="modalState.bom[${idx}].ingredient_item_id=this.value">
+        ${simpleItems.map(si=>`<option value="${si.id}" ${row.ingredient_item_id===si.id?'selected':''}>${si.name}</option>`).join('')}
+      </select>
+      <input type="number" placeholder="Qty" value="${row.qty_per_batch||''}" onchange="modalState.bom[${idx}].qty_per_batch=this.value">
+      <input placeholder="Unit" value="${row.unit||''}" onchange="modalState.bom[${idx}].unit=this.value">
+      <button class="btn small danger" onclick="removeBomRow(${idx})">✕</button>
+    </div>`).join('') || '<p class="muted" style="font-size:12px;">No ingredients added yet.</p>';
+}
+function addBomRow(){ modalState.bom.push({ingredient_item_id:'', qty_per_batch:'', unit:''}); renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished')); }
+function removeBomRow(idx){ modalState.bom.splice(idx,1); renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished')); }
+function renderTierRows(){
+  document.getElementById('tierRows').innerHTML = modalState.tiers.map((t,idx)=>`
+    <div class="tier-row">
+      <input placeholder="Tier label (e.g. Retail Shops)" value="${t.label||''}" onchange="modalState.tiers[${idx}].label=this.value">
+      <input type="number" placeholder="Price (Rs.)" value="${t.price||''}" onchange="modalState.tiers[${idx}].price=this.value">
+      <button class="btn small danger" onclick="removeTierRow(${idx})">✕</button>
+    </div>`).join('') || '<p class="muted" style="font-size:12px;">No price tiers yet.</p>';
+}
+function addTierRow(){ if(modalState.tiers.length>=3){ alert('Maximum 3 price tiers per item.'); return; } modalState.tiers.push({label:'',price:''}); renderTierRows(); }
+function removeTierRow(idx){ modalState.tiers.splice(idx,1); renderTierRows(); }
+
+function saveItem(editId){
+  const fields = {
+    name: val('f_name'), type: val('f_type'), sku: val('f_sku'), unit: val('f_unit'),
+    category: val('f_category'), min_stock: Number(val('f_min'))||0, avg_cost: Number(val('f_cost'))||0,
+    status: val('f_status'),
+    batch_size: val('f_type')==='finished' ? Number(val('f_batchsize'))||100 : undefined,
+    shelf_life_days: val('f_type')==='finished' ? Number(val('f_shelf'))||0 : undefined,
+    bom: val('f_type')==='finished' ? modalState.bom.filter(r=>r.ingredient_item_id) : [],
+    price_tiers: val('f_type')!=='non_inventory' ? modalState.tiers.filter(t=>t.label) : [],
+  };
+  if(editId) DATA.api.updateItem(editId, fields);
+  else DATA.api.createItem(fields);
+  closeModal(); renderView();
+}
+
+/* ---------------- SHOPS ---------------- */
+function renderShops(){
+  const shops = DATA.api.getShops();
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search shops..." oninput="filterTable(this.value,'shopTable')"><div class="spacer"></div><button class="btn" onclick="openShopModal()">+ Add Shop</button></div>
+    <div class="panel">
+      <table id="shopTable">
+        <thead><tr><th>Shop</th><th>Owner</th><th>Phone</th><th>District</th><th class="num">Outstanding</th><th>Status</th><th></th></tr></thead>
+        <tbody>${shops.map(s=>{
+          const bal = shopBalance(s.id);
+          return `<tr>
+            <td><strong>${s.name}</strong><div class="muted" style="font-size:11px;">${s.address||''}</div></td>
+            <td>${s.owner||'—'}</td><td>${s.phone||'—'}</td><td>${s.district||'—'}</td>
+            <td class="num">${fmt(bal)}</td>
+            <td><span class="pill ${s.status==='active'?'good':'neutral'}">${s.status}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openShopModal('${s.id}')">Edit</button><button class="btn small danger" onclick="deleteShopConfirm('${s.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!shops.length ? '<div class="empty-state">No shops yet.</div>' : ''}
+    </div>`;
+}
+function deleteShopConfirm(id){ if(confirm('Delete this shop?')){ DATA.api.deleteShop(id); renderView(); } }
+function openShopModal(editId){
+  const editing = editId ? DB.shops.find(s=>s.id===editId) : null;
+  showModal(editing?'Edit Shop':'Add Shop', `
+    <div class="form-row"><label>Shop Name</label><input id="f_name" value="${editing?editing.name:''}"></div>
+    <div class="form-grid"><div class="form-row"><label>Owner</label><input id="f_owner" value="${editing?editing.owner||'':''}"></div><div class="form-row"><label>Phone</label><input id="f_phone" value="${editing?editing.phone||'':''}"></div></div>
+    <div class="form-grid"><div class="form-row"><label>District</label><input id="f_district" value="${editing?editing.district||'':''}"></div><div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div></div>
+    <div class="form-row"><label>Address</label><input id="f_address" value="${editing?editing.address||'':''}"></div>
+  `, () => {
+    const fields = {name:val('f_name'), owner:val('f_owner'), phone:val('f_phone'), district:val('f_district'), address:val('f_address'), status:val('f_status')};
+    if(editId) DATA.api.updateShop(editId, fields); else DATA.api.createShop(fields);
+    closeModal(); renderView();
+  });
+}
+
+/* ---------------- PURCHASES ---------------- */
+function renderPurchases(){
+  const purchases = [...DATA.api.getPurchases()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search purchases..." oninput="filterTable(this.value,'purchaseTable')"><div class="spacer"></div><button class="btn" onclick="openPurchaseModal()">+ New Purchase</button></div>
+    <div class="panel">
+      <table id="purchaseTable">
+        <thead><tr><th>Date</th><th>Supplier</th><th>Item</th><th class="num">Qty</th><th class="num">Total</th><th class="num">Balance Due</th><th></th></tr></thead>
+        <tbody>${purchases.map(p=>{
+          const item = DB.items.find(i=>i.id===p.item_id);
+          const bal = purchaseBalance(p);
+          return `<tr>
+            <td>${fmtDate(p.date)}</td><td>${p.supplier_name}</td><td>${item?item.name:'—'}</td>
+            <td class="num">${p.qty}</td><td class="num">${fmt(p.total_cost)}</td>
+            <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openPurchaseDetail('${p.id}')">Manage</button><button class="btn small danger" onclick="deletePurchaseConfirm('${p.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!purchases.length ? '<div class="empty-state">No purchases logged yet.</div>' : ''}
+    </div>`;
+}
+function deletePurchaseConfirm(id){ if(confirm('Delete this purchase and all its payments/returns?')){ DATA.api.deletePurchase(id); renderView(); } }
+function openPurchaseModal(editId){
+  const editing = editId ? DB.purchases.find(p=>p.id===editId) : null;
+  const itemOpts = DB.items.map(i=>`<option value="${i.id}" ${editing&&editing.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
+  showModal(editing?'Edit Purchase':'New Purchase', `
+    <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Supplier</label><input id="f_supplier" value="${editing?editing.supplier_name||'':''}" placeholder="Supplier name"></div></div>
+    <div class="form-row"><label>Item</label><select id="f_item">${itemOpts}</select></div>
+    <div class="form-grid"><div class="form-row"><label>Quantity</label><input id="f_qty" type="number" value="${editing?editing.qty:''}"></div><div class="form-row"><label>Unit Cost (Rs.)</label><input id="f_cost" type="number" value="${editing?editing.unit_cost:''}"></div></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
+  `, () => {
+    const fields = {date:val('f_date'), supplier_name:val('f_supplier'), item_id:val('f_item'), qty:Number(val('f_qty')), unit_cost:Number(val('f_cost')), notes:val('f_notes')};
+    if(editId) DATA.api.updatePurchase(editId, fields); else DATA.api.createPurchase(fields);
+    closeModal(); renderView();
+  });
+}
+function openPurchaseDetail(id){
+  const p = DB.purchases.find(x=>x.id===id);
+  const item = DB.items.find(i=>i.id===p.item_id);
+  const bal = purchaseBalance(p);
+  showModal('Purchase: ' + (item?item.name:'') + ' from ' + p.supplier_name, `
+    <div class="balance-box"><span>Balance owed to supplier</span><span class="amt" style="color:${bal>0?'var(--bad)':'var(--good)'}">${fmt(bal)}</span></div>
+    <p class="muted" style="font-size:12px;margin-bottom:10px;">${fmtDate(p.date)} · Qty ${p.qty} @ ${fmt(p.unit_cost)} = ${fmt(p.total_cost)}</p>
+    <div class="section-title">Edit Purchase<button class="btn small secondary" onclick="closeModal();openPurchaseModal('${id}')">Edit Details</button></div>
+
+    <div class="section-title">Payments to Supplier</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Reference</th></tr></thead>
+    <tbody>${(p.payments||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${fmt(x.amount)}</td><td>${x.method}</td><td class="muted">${x.reference||'—'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="padding:10px;">No payments yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Amount</label><input id="pay_amount" type="number"></div>
+      <div class="form-row"><label>Method</label><select id="pay_method"><option value="cash">Cash</option><option value="bank transfer">Bank Transfer</option><option value="cheque">Cheque</option></select></div>
+      <div class="form-row"><label>Reference</label><input id="pay_ref" placeholder="optional"></div>
+      <button class="btn small" onclick="addPurchasePaymentNow('${id}')">+ Add Payment</button>
+    </div>
+
+    <div class="section-title">Returns to Supplier</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Qty</th><th>Reason</th><th class="num">Cost Impact</th></tr></thead>
+    <tbody>${(p.returns||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${x.qty}</td><td>${x.reason}</td><td class="num">${fmt(x.cost_impact)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="padding:10px;">No returns yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Qty</label><input id="ret_qty" type="number"></div>
+      <div class="form-row"><label>Reason</label><input id="ret_reason" placeholder="e.g. damaged"></div>
+      <div class="form-row"><label>Cost Impact</label><input id="ret_cost" type="number"></div>
+      <button class="btn small" onclick="addPurchaseReturnNow('${id}')">+ Add Return</button>
+    </div>
+  `, () => closeModal());
+  document.querySelector('.modal-foot .btn:not(.secondary)').textContent = 'Done';
+}
+function addPurchasePaymentNow(id){
+  const amount = Number(val('pay_amount')); if(!amount){ alert('Enter an amount'); return; }
+  DATA.api.addPurchasePayment(id, {date: todayISO(), amount, method: val('pay_method'), reference: val('pay_ref')});
+  saveToStorage(); openPurchaseDetail(id);
+}
+function addPurchaseReturnNow(id){
+  const qty = Number(val('ret_qty')); if(!qty){ alert('Enter a quantity'); return; }
+  DATA.api.addPurchaseReturn(id, {date: todayISO(), qty, reason: val('ret_reason'), cost_impact: Number(val('ret_cost'))||0});
+  saveToStorage(); openPurchaseDetail(id); renderView();
+}
+
+/* ---------------- PRODUCTION ---------------- */
+function renderProduction(){
+  const batches = [...DATA.api.getBatches()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search batches..." oninput="filterTable(this.value,'batchTable')"><div class="spacer"></div><button class="btn" onclick="openBatchModal()">+ New Production Batch</button></div>
+    <div class="panel">
+      <table id="batchTable">
+        <thead><tr><th>Batch #</th><th>Date</th><th>Finished Good</th><th class="num">Qty</th><th class="num">Total Cost</th><th class="num">Unit Cost</th><th>Expiry</th><th>Flags</th><th></th></tr></thead>
+        <tbody>${batches.map(b=>{
+          const item = DB.items.find(i=>i.id===b.item_id);
+          return `<tr>
+            <td><strong>${b.batch_number}</strong></td><td>${fmtDate(b.date)}</td><td>${item?item.name:'—'}</td>
+            <td class="num">${b.qty_produced}</td><td class="num">${fmt(b.total_cost||0)}</td><td class="num">${fmt(b.unit_cost||0)}</td>
+            <td>${b.expiry_date?fmtDate(b.expiry_date):'—'}</td>
+            <td>${b.stock_override?'<span class="pill warn">Override used</span>':'<span class="pill good">Clean</span>'}</td>
+            <td><button class="btn small danger" onclick="deleteBatchConfirm('${b.id}')">Delete</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!batches.length ? '<div class="empty-state">No production batches yet.</div>' : ''}
+    </div>`;
+}
+function deleteBatchConfirm(id){ if(confirm('Delete this batch? This will affect availability calculations.')){ DATA.api.deleteBatch(id); renderView(); } }
+function openBatchModal(){
+  const finishedItems = DB.items.filter(i=>i.type==='finished');
+  if(!finishedItems.length){ alert('Add a Finished Good item with a BOM first, under Items.'); return; }
+  const opts = finishedItems.map(i=>`<option value="${i.id}">${i.name}</option>`).join('');
+  showModal('New Production Batch', `
+    <div id="batchWarnArea"></div>
+    <div class="form-grid"><div class="form-row"><label>Batch Number</label><input id="f_batchno" placeholder="e.g. WTP-0092"></div><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${todayISO()}"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Finished Good</label><select id="f_item">${opts}</select></div><div class="form-row"><label>Qty Produced</label><input id="f_qty" type="number" value="100"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Packaging Cost</label><input id="f_pack" type="number" value="0"></div><div class="form-row"><label>Gas Cost</label><input id="f_gas" type="number" value="0"></div></div>
+    <div class="form-row"><label>Labor Cost</label><input id="f_labor" type="number" value="0"></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" placeholder="optional"></div>
+  `, () => attemptBatchSave(false));
+}
+function attemptBatchSave(override){
+  const batch = {batch_number:val('f_batchno'), date:val('f_date'), item_id:val('f_item'), qty_produced:Number(val('f_qty')), packaging_cost:Number(val('f_pack')), gas_cost:Number(val('f_gas')), labor_cost:Number(val('f_labor')), notes:val('f_notes'), override};
+  const result = DATA.api.createProductionBatch(batch);
+  if(!result.ok){
+    const lines = result.shortfalls.map(s=>{ const ing = DB.items.find(i=>i.id===s.ingredient_item_id); return `${ing.name}: need ${s.need.toFixed(1)} ${ing.unit||''}, have ${s.have.toFixed(1)} ${ing.unit||''}`; }).join('<br>');
+    document.getElementById('batchWarnArea').innerHTML = `<div class="warn-banner"><strong>Insufficient stock for this batch:</strong><br>${lines}<br><br><button class="btn small" onclick="attemptBatchSave(true)">Save Anyway (Override)</button></div>`;
+    return;
+  }
+  closeModal(); renderView();
+}
+
+/* ---------------- SALES ---------------- */
+function renderSales(){
+  const sales = [...DATA.api.getSales()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search sales..." oninput="filterTable(this.value,'salesTable')"><div class="spacer"></div><button class="btn" onclick="openSaleModal()">+ New Sale</button></div>
+    <div class="panel">
+      <table id="salesTable">
+        <thead><tr><th>Date</th><th>Shop</th><th>Item</th><th class="num">Qty</th><th>Type</th><th class="num">Total</th><th class="num">Balance Due</th><th></th></tr></thead>
+        <tbody>${sales.map(s=>{
+          const shop = DB.shops.find(sh=>sh.id===s.shop_id);
+          const item = DB.items.find(i=>i.id===s.item_id);
+          const bal = saleBalance(s);
+          return `<tr>
+            <td>${fmtDate(s.date)}</td><td>${shop?shop.name:'—'}</td><td>${item?item.name:'—'}</td>
+            <td class="num">${s.qty}</td><td><span class="pill ${s.type==='consignment'?'warn':'good'}">${s.type.replace('_',' ')}</span></td>
+            <td class="num">${fmt(s.total_value)}</td>
+            <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openSaleDetail('${s.id}')">Manage</button><button class="btn small danger" onclick="deleteSaleConfirm('${s.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!sales.length ? '<div class="empty-state">No sales logged yet.</div>' : ''}
+    </div>`;
+}
+function deleteSaleConfirm(id){ if(confirm('Delete this sale and all its payments/returns?')){ DATA.api.deleteSale(id); renderView(); } }
+function openSaleModal(editId){
+  const editing = editId ? DB.sales.find(s=>s.id===editId) : null;
+  const shopOpts = DB.shops.filter(s=>s.status==='active').map(s=>`<option value="${s.id}" ${editing&&editing.shop_id===s.id?'selected':''}>${s.name}</option>`).join('');
+  const itemOpts = DB.items.filter(i=>i.type!=='non_inventory').map(i=>`<option value="${i.id}" ${editing&&editing.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
+  showModal(editing?'Edit Sale':'New Sale', `
+    <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Shop</label><select id="f_shop">${shopOpts}</select></div></div>
+    <div class="form-grid"><div class="form-row"><label>Item</label><select id="f_item" onchange="prefillTierPrice()">${itemOpts}</select></div><div class="form-row"><label>Quantity</label><input id="f_qty" type="number" value="${editing?editing.qty:''}"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Unit Price (Rs.)</label><input id="f_price" type="number" value="${editing?editing.unit_price:''}"></div><div class="form-row"><label>Type</label><select id="f_type"><option value="consignment" ${editing&&editing.type==='consignment'?'selected':''}>Consignment</option><option value="direct_sale" ${editing&&editing.type==='direct_sale'?'selected':''}>Direct Sale</option></select></div></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
+  `, () => {
+    const fields = {date:val('f_date'), shop_id:val('f_shop'), item_id:val('f_item'), qty:Number(val('f_qty')), unit_price:Number(val('f_price')), type:val('f_type'), notes:val('f_notes')};
+    if(editId) DATA.api.updateSale(editId, fields); else DATA.api.createSale(fields);
+    closeModal(); renderView();
+  });
+}
+function prefillTierPrice(){
+  const item = DB.items.find(i=>i.id===val('f_item'));
+  if(item && item.price_tiers && item.price_tiers.length){ document.getElementById('f_price').value = item.price_tiers[0].price; }
+}
+function openSaleDetail(id){
+  const s = DB.sales.find(x=>x.id===id);
+  const shop = DB.shops.find(sh=>sh.id===s.shop_id);
+  const item = DB.items.find(i=>i.id===s.item_id);
+  const bal = saleBalance(s);
+  showModal('Sale: ' + (item?item.name:'') + ' to ' + (shop?shop.name:''), `
+    <div class="balance-box"><span>Balance due from shop</span><span class="amt" style="color:${bal>0?'var(--bad)':'var(--good)'}">${fmt(bal)}</span></div>
+    <p class="muted" style="font-size:12px;margin-bottom:10px;">${fmtDate(s.date)} · Qty ${s.qty} @ ${fmt(s.unit_price)} = ${fmt(s.total_value)}</p>
+    <div class="section-title">Edit Sale<button class="btn small secondary" onclick="closeModal();openSaleModal('${id}')">Edit Details</button></div>
+
+    <div class="section-title">Payments from Shop</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Reference</th></tr></thead>
+    <tbody>${(s.payments||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${fmt(x.amount)}</td><td>${x.method}</td><td class="muted">${x.reference||'—'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="padding:10px;">No payments yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Amount</label><input id="pay_amount" type="number"></div>
+      <div class="form-row"><label>Method</label><select id="pay_method"><option value="cash">Cash</option><option value="bank transfer">Bank Transfer</option><option value="cheque">Cheque</option></select></div>
+      <div class="form-row"><label>Reference</label><input id="pay_ref" placeholder="optional"></div>
+      <button class="btn small" onclick="addSalePaymentNow('${id}')">+ Add Payment</button>
+    </div>
+
+    <div class="section-title">Returns / Restock</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Qty</th><th>Reason</th><th class="num">Cost Impact</th><th>Restocked?</th></tr></thead>
+    <tbody>${(s.returns||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${x.qty}</td><td>${x.reason}</td><td class="num">${fmt(x.cost_impact)}</td><td>${x.restock?'Yes':'No'}</td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="padding:10px;">No returns yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Qty</label><input id="ret_qty" type="number"></div>
+      <div class="form-row"><label>Reason</label><input id="ret_reason" placeholder="e.g. expired"></div>
+      <div class="form-row"><label>Cost Impact</label><input id="ret_cost" type="number"></div>
+      <button class="btn small" onclick="addSaleReturnNow('${id}')">+ Add Return</button>
+    </div>
+    <div class="form-row"><label><input type="checkbox" id="ret_restock" style="width:auto;display:inline;margin-right:6px;">Restock this quantity back into Availability</label></div>
+  `, () => closeModal());
+  document.querySelector('.modal-foot .btn:not(.secondary)').textContent = 'Done';
+}
+function addSalePaymentNow(id){
+  const amount = Number(val('pay_amount')); if(!amount){ alert('Enter an amount'); return; }
+  DATA.api.addSalePayment(id, {date: todayISO(), amount, method: val('pay_method'), reference: val('pay_ref')});
+  saveToStorage(); openSaleDetail(id);
+}
+function addSaleReturnNow(id){
+  const qty = Number(val('ret_qty')); if(!qty){ alert('Enter a quantity'); return; }
+  const restock = document.getElementById('ret_restock').checked;
+  DATA.api.addSaleReturn(id, {date: todayISO(), qty, reason: val('ret_reason'), cost_impact: Number(val('ret_cost'))||0, restock});
+  saveToStorage(); openSaleDetail(id); renderView();
+}
+
+/* ---------------- AVAILABILITY ---------------- */
+function renderAvailability(){
+  const items = DATA.api.getItems().filter(i=>i.type!=='non_inventory');
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search..." oninput="filterTable(this.value,'availTable')"></div>
+    <div class="panel">
+      <table id="availTable">
+        <thead><tr><th>Item</th><th>Type</th><th class="num">Purchased</th><th class="num">Produced</th><th class="num">Sold</th><th class="num">Returned/Restocked</th><th class="num">Current Stock</th><th>Status</th></tr></thead>
+        <tbody>${items.map(i=>{
+          const purchased = DB.purchases.filter(p=>p.item_id===i.id).reduce((s,p)=>s+Number(p.qty),0);
+          const produced = DB.production_batches.filter(b=>b.item_id===i.id).reduce((s,b)=>s+Number(b.qty_produced),0);
+          const sold = DB.sales.filter(s=>s.item_id===i.id).reduce((s,x)=>s+Number(x.qty),0);
+          const restocked = DB.sales.filter(s=>s.item_id===i.id).reduce((s,x)=>s+(x.returns||[]).filter(r=>r.restock).reduce((a,r)=>a+Number(r.qty),0),0);
+          const stock = stockOf(i.id);
+          const low = i.min_stock && stock < Number(i.min_stock);
+          return `<tr>
+            <td><strong>${i.name}</strong></td><td><span class="pill ${i.type==='finished'?'good':'neutral'}">${i.type==='finished'?'Finished Good':'Simple'}</span></td>
+            <td class="num">${purchased}</td><td class="num">${produced}</td><td class="num">${sold}</td><td class="num">${restocked}</td>
+            <td class="num"><strong>${stock} ${i.unit||''}</strong></td>
+            <td><span class="pill ${low?'bad':'good'}">${low?'Low Stock':'OK'}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!items.length ? '<div class="empty-state">No items to track yet.</div>' : ''}
+    </div>`;
+}
+
+/* ---------------- REPORTS ---------------- */
+function renderReports(){
+  document.getElementById('content').innerHTML = `
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><h2>Cash Flow</h2><div class="sub">Payments received vs paid out</div></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartCashFlow"></canvas></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Sales by Item</h2></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartProductPerf"></canvas></div></div></div>
+    </div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><h2>Retail Performance</h2><div class="sub">Revenue by shop, ranked</div></div><div class="panel-body" id="retailPerf"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Outstanding Balances</h2></div><div class="panel-body" id="agingTable"></div></div>
+    </div>
+    <div class="panel"><div class="panel-head"><h2>Expiry Forecast</h2></div><div class="panel-body" id="expiryForecast"></div></div>`;
+
+  const sales = DATA.api.getSales(); const purchases = DATA.api.getPurchases();
+  const cashIn = sales.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashOut = purchases.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  new Chart(document.getElementById('chartCashFlow'), {type:'bar', data:{labels:['Inflow (Payments In)','Outflow (Payments Out)'], datasets:[{data:[cashIn,cashOut], backgroundColor:['#268a4e','#c4422e'], borderRadius:3}]}, options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170'},grid:{display:false}}, y:{ticks:{color:'#5b6170'},grid:{color:'#eceef2'}}}}});
+
+  const byItem = {}; sales.forEach(s=>{ byItem[s.item_id] = (byItem[s.item_id]||0)+s.qty; });
+  const items = DATA.api.getItems();
+  new Chart(document.getElementById('chartProductPerf'), {type:'doughnut', data:{labels:Object.keys(byItem).map(id=>{const it=items.find(i=>i.id===id); return it?it.name:'—';}), datasets:[{data:Object.values(byItem), backgroundColor:['#c97a2e','#e8923f','#268a4e','#3a7ea0','#b8841a']}]}, options:{plugins:{legend:{labels:{color:'#1f2430',font:{size:11}}}}}});
+
+  const shops = DATA.api.getShops();
+  const revByShop = shops.map(s=>({name:s.name, rev: sales.filter(x=>x.shop_id===s.id).reduce((sum,x)=>sum+x.total_value,0)})).sort((a,b)=>b.rev-a.rev);
+  document.getElementById('retailPerf').innerHTML = `<table><thead><tr><th>Rank</th><th>Shop</th><th class="num">Revenue</th></tr></thead><tbody>${revByShop.map((r,i)=>`<tr><td class="muted">#${i+1}</td><td>${r.name}</td><td class="num">${fmt(r.rev)}</td></tr>`).join('') || '<tr><td colspan="3" class="muted" style="padding:10px;">No sales yet.</td></tr>'}</tbody></table>`;
+
+  document.getElementById('agingTable').innerHTML = `<table><thead><tr><th>Shop</th><th class="num">Balance</th><th>Status</th></tr></thead><tbody>${shops.map(s=>{ const bal = shopBalance(s.id); return `<tr><td>${s.name}</td><td class="num">${fmt(bal)}</td><td><span class="pill ${bal>3000?'bad':bal>0?'warn':'good'}">${bal>0?'Outstanding':'Settled'}</span></td></tr>`; }).join('') || '<tr><td colspan="3" class="muted" style="padding:10px;">No shops yet.</td></tr>'}</tbody></table>`;
+
+  const batches = DATA.api.getBatches().filter(b=>b.expiry_date);
+  document.getElementById('expiryForecast').innerHTML = `<table><thead><tr><th>Batch</th><th>Item</th><th>Expiry Date</th><th class="num">Days Left</th><th>Risk</th></tr></thead><tbody>${batches.map(b=>{ const item = items.find(i=>i.id===b.item_id); const days = Math.ceil((new Date(b.expiry_date)-new Date())/86400000); const risk = days<=3?'bad':days<=7?'warn':days<=14?'neutral':'good'; const label = days<=3?'High':days<=7?'Medium':days<=14?'Watch':'Low'; return `<tr><td>${b.batch_number}</td><td>${item?item.name:'—'}</td><td>${fmtDate(b.expiry_date)}</td><td class="num">${days}</td><td><span class="pill ${risk}">${label}</span></td></tr>`; }).join('') || '<tr><td colspan="5" class="muted" style="padding:10px;">No batches with expiry tracking.</td></tr>'}</tbody></table>`;
+}
+
+/* ---------------- SETTINGS ---------------- */
+function renderSettings(){
+  document.getElementById('content').innerHTML = `
+    <div class="panel">
+      <div class="panel-head"><h2>Backup &amp; Migration</h2><div class="sub">Your data is stored only in this browser. Export regularly.</div></div>
+      <div class="panel-body">
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">Data is saved to this browser's local storage only. Export a backup file regularly and use Import to restore it here or migrate to a future backend.</p>
+        <button class="btn" onclick="exportData()">⬇ Export All Data (.json)</button>
+        <button class="btn secondary" onclick="document.getElementById('importFile').click()">⬆ Import Data (.json)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <div style="margin-top:14px;"><button class="btn danger small" onclick="clearAllData()">Clear All Data</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Users &amp; Roles</h2></div>
+      <div class="panel-body"><table><thead><tr><th>Role</th><th>Module Access</th></tr></thead><tbody>${Object.entries(ROLES).map(([k,r])=>`<tr><td><strong>${r.label}</strong></td><td class="muted">${r.modules.join(', ')}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+    <p class="muted" style="font-size:11.5px;">Backend: browser-only (local storage). To move to Google Sheets, the DATA.api layer in this file is the single swap point.</p>`;
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `malan-makanan-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const requiredKeys = ['items','shops','purchases','sales','production_batches'];
+      if(!requiredKeys.every(k=>Array.isArray(parsed[k]))){ alert('This file does not match the expected backup format.'); return; }
+      DB = parsed; saveToStorage(); renderView(); alert('Data imported successfully.');
+    }catch(err){ alert('Could not read this file.'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+function clearAllData(){
+  if(!confirm('This will permanently erase all data in this browser. Export a backup first if you need one. Continue?')) return;
+  DB = {items:[], shops:[], purchases:[], sales:[], production_batches:[]};
+  saveToStorage(); renderView();
+}
+
+/* ---------------- MODAL HELPERS ---------------- */
+function showModal(title, bodyHtml, onSave){
+  document.getElementById('modalBox').innerHTML = `
+    <div class="modal-head"><h3>${title}</h3><span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div class="modal-body">${bodyHtml}</div>
+    <div class="modal-foot"><button class="btn secondary" onclick="closeModal()">Cancel</button><button class="btn" id="modalSaveBtn">Save</button></div>`;
+  document.getElementById('modalSaveBtn').onclick = onSave;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+function filterTable(query, tableId){
+  const q = query.toLowerCase();
+  document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr=>{ tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+}
+
+/* ---------------- INIT ---------------- */
+renderNav();
+renderView();
+</script>
+</body>
+</html>
