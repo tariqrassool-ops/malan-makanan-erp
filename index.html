@@ -490,12 +490,13 @@ function deleteItemConfirm(id){
   if(confirm('Delete this item? This cannot be undone.')){ DATA.api.deleteItem(id); renderView(); }
 }
 
-let modalState = { bom: [], tiers: [] };
+let modalState = { bom: [], tiers: [], altUom: null };
 
 function openItemModal(editId){
   const editing = editId ? DB.items.find(i=>i.id===editId) : null;
   modalState.bom = editing ? JSON.parse(JSON.stringify(editing.bom||[])) : [];
   modalState.tiers = editing ? JSON.parse(JSON.stringify(editing.price_tiers||[])) : [];
+  modalState.altUom = editing && editing.alt_uom ? JSON.parse(JSON.stringify(editing.alt_uom)) : null;
   const simpleItems = DB.items.filter(i=>i.type==='simple' || i.type==='finished');
 
   const body = `
@@ -530,17 +531,38 @@ function openItemModal(editId){
       <div class="section-title">Price Tiers<button class="btn small secondary" onclick="addTierRow()">+ Add Tier</button></div>
       <div id="tierRows"></div>
     </div>
+    <div id="altUomSection" style="display:none;">
+      <div class="section-title">Alternate Unit of Measure (optional)</div>
+      <p class="muted" style="font-size:11.5px;margin-bottom:8px;">e.g. Base unit = pcs, Alt unit = "Pack (15 pcs)" with conversion 15 — or Base = g, Alt = "kg" with conversion 1000.</p>
+      <div id="altUomRow"></div>
+    </div>
     <div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div>
   `;
   showModal(editing?'Edit Item':'Add Item', body, () => saveItem(editId));
   toggleItemTypeSections();
   renderBomRows(simpleItems);
   renderTierRows();
+  renderAltUomRow();
 }
+function renderAltUomRow(){
+  const a = modalState.altUom || {name:'', factor:''};
+  document.getElementById('altUomRow').innerHTML = `
+    <div class="tier-row">
+      <input placeholder="Alt unit name (e.g. Pack of 15)" value="${a.name}" onchange="updateAltUom('name', this.value)">
+      <input type="number" step="0.0001" placeholder="1 alt unit = __ base units" value="${a.factor}" onchange="updateAltUom('factor', this.value)">
+      <button class="btn small danger" onclick="clearAltUom()">✕</button>
+    </div>`;
+}
+function updateAltUom(field, value){
+  if(!modalState.altUom) modalState.altUom = {name:'', factor:''};
+  modalState.altUom[field] = value;
+}
+function clearAltUom(){ modalState.altUom = null; renderAltUomRow(); }
 function toggleItemTypeSections(){
   const type = val('f_type');
   document.getElementById('finishedOnlyFields').style.display = type==='finished' ? 'block' : 'none';
   document.getElementById('priceTierSection').style.display = type!=='non_inventory' ? 'block' : 'none';
+  document.getElementById('altUomSection').style.display = type!=='non_inventory' ? 'block' : 'none';
 }
 function renderBomRows(simpleItems){
   document.getElementById('bomRows').innerHTML = modalState.bom.map((row,idx)=>`
@@ -575,6 +597,7 @@ function saveItem(editId){
     shelf_life_days: val('f_type')==='finished' ? Number(val('f_shelf'))||0 : undefined,
     bom: val('f_type')==='finished' ? modalState.bom.filter(r=>r.ingredient_item_id) : [],
     price_tiers: val('f_type')!=='non_inventory' ? modalState.tiers.filter(t=>t.label) : [],
+    alt_uom: (val('f_type')!=='non_inventory' && modalState.altUom && modalState.altUom.name && modalState.altUom.factor) ? {name: modalState.altUom.name, factor: Number(modalState.altUom.factor)} : null,
   };
   if(editId) DATA.api.updateItem(editId, fields);
   else DATA.api.createItem(fields);
@@ -758,7 +781,7 @@ function renderSales(){
           const bal = saleBalance(s);
           return `<tr>
             <td>${fmtDate(s.date)}</td><td>${shop?shop.name:'—'}</td><td>${item?item.name:'—'}</td>
-            <td class="num">${s.qty}</td><td><span class="pill ${s.type==='consignment'?'warn':'good'}">${s.type.replace('_',' ')}</span></td>
+            <td class="num">${s.entry_unit==='alt' && item && item.alt_uom ? s.entry_qty+' '+item.alt_uom.name : s.qty}</td><td><span class="pill ${s.type==='consignment'?'warn':'good'}">${s.type.replace('_',' ')}</span></td>
             <td class="num">${fmt(s.total_value)}</td>
             <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
             <td><div class="row-actions"><button class="btn small secondary" onclick="openSaleDetail('${s.id}')">Manage</button><button class="btn small danger" onclick="deleteSaleConfirm('${s.id}')">Delete</button></div></td>
@@ -775,14 +798,49 @@ function openSaleModal(editId){
   const itemOpts = DB.items.filter(i=>i.type!=='non_inventory').map(i=>`<option value="${i.id}" ${editing&&editing.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
   showModal(editing?'Edit Sale':'New Sale', `
     <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Shop</label><select id="f_shop">${shopOpts}</select></div></div>
-    <div class="form-grid"><div class="form-row"><label>Item</label><select id="f_item" onchange="prefillTierPrice()">${itemOpts}</select></div><div class="form-row"><label>Quantity</label><input id="f_qty" type="number" value="${editing?editing.qty:''}"></div></div>
-    <div class="form-grid"><div class="form-row"><label>Unit Price (Rs.)</label><input id="f_price" type="number" value="${editing?editing.unit_price:''}"></div><div class="form-row"><label>Type</label><select id="f_type"><option value="consignment" ${editing&&editing.type==='consignment'?'selected':''}>Consignment</option><option value="direct_sale" ${editing&&editing.type==='direct_sale'?'selected':''}>Direct Sale</option></select></div></div>
+    <div class="form-row"><label>Item</label><select id="f_item" onchange="onSaleItemChange()">${itemOpts}</select></div>
+    <div id="saleUnitRow"></div>
+    <div class="form-grid"><div class="form-row"><label id="qtyLabel">Quantity</label><input id="f_qty" type="number" step="0.0001" value="${editing?(editing.entry_qty!==undefined?editing.entry_qty:editing.qty):''}" onchange="recalcSaleConversion()"></div><div class="form-row"><label>Unit Price (Rs.)</label><input id="f_price" type="number" step="0.0001" value="${editing?editing.unit_price:''}"></div></div>
+    <div id="conversionNote" class="muted" style="font-size:11.5px;margin-bottom:10px;"></div>
+    <div class="form-row"><label>Type</label><select id="f_type"><option value="consignment" ${editing&&editing.type==='consignment'?'selected':''}>Consignment</option><option value="direct_sale" ${editing&&editing.type==='direct_sale'?'selected':''}>Direct Sale</option></select></div>
     <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
   `, () => {
-    const fields = {date:val('f_date'), shop_id:val('f_shop'), item_id:val('f_item'), qty:Number(val('f_qty')), unit_price:Number(val('f_price')), type:val('f_type'), notes:val('f_notes')};
+    const itemSel = DB.items.find(i=>i.id===val('f_item'));
+    const enteredQty = Number(val('f_qty'));
+    const unitChoice = document.getElementById('f_unit_choice') ? val('f_unit_choice') : 'base';
+    const baseQty = (itemSel && itemSel.alt_uom && unitChoice==='alt') ? enteredQty * Number(itemSel.alt_uom.factor) : enteredQty;
+    const fields = {date:val('f_date'), shop_id:val('f_shop'), item_id:val('f_item'), qty: baseQty, entry_qty: enteredQty, entry_unit: unitChoice, unit_price:Number(val('f_price')), type:val('f_type'), notes:val('f_notes')};
     if(editId) DATA.api.updateSale(editId, fields); else DATA.api.createSale(fields);
     closeModal(); renderView();
   });
+  onSaleItemChange(editing);
+}
+function onSaleItemChange(editing){
+  const item = DB.items.find(i=>i.id===val('f_item'));
+  const row = document.getElementById('saleUnitRow');
+  if(item && item.alt_uom && item.alt_uom.factor){
+    const savedChoice = editing && editing.entry_unit ? editing.entry_unit : 'alt';
+    row.innerHTML = `<div class="form-row"><label>Sell In</label><select id="f_unit_choice" onchange="recalcSaleConversion()">
+      <option value="base" ${savedChoice==='base'?'selected':''}>Base unit (${item.unit||'unit'})</option>
+      <option value="alt" ${savedChoice==='alt'?'selected':''}>${item.alt_uom.name} (= ${item.alt_uom.factor} ${item.unit||'base units'})</option>
+    </select></div>`;
+  } else {
+    row.innerHTML = '';
+  }
+  prefillTierPrice();
+  recalcSaleConversion();
+}
+function recalcSaleConversion(){
+  const item = DB.items.find(i=>i.id===val('f_item'));
+  const note = document.getElementById('conversionNote');
+  if(!item || !item.alt_uom || !document.getElementById('f_unit_choice')){ if(note) note.textContent=''; return; }
+  const choice = val('f_unit_choice');
+  const qty = Number(val('f_qty'))||0;
+  if(choice==='alt'){
+    note.textContent = `= ${(qty*Number(item.alt_uom.factor)).toLocaleString()} ${item.unit||'base units'} deducted from stock.`;
+  } else {
+    note.textContent = '';
+  }
 }
 function prefillTierPrice(){
   const item = DB.items.find(i=>i.id===val('f_item'));
