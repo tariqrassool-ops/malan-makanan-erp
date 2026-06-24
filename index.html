@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Malan Makanan — Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
@@ -48,7 +51,6 @@
   --transition-slow:0.3s cubic-bezier(0.4,0,0.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 body{
   background:var(--bg);
   color:var(--text);
@@ -70,8 +72,6 @@ body{
   display:flex;
   flex-direction:column;
   padding:20px 0 16px 0;
-  position:relative;
-  z-index:10;
 }
 .brand{padding:0 20px 20px 20px;border-bottom:1px solid var(--border-subtle);margin-bottom:12px;}
 .brand-mark{font-family:var(--font-mono);font-size:10px;letter-spacing:0.14em;color:var(--accent);text-transform:uppercase;font-weight:500;margin-bottom:4px;}
@@ -151,6 +151,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .toolbar input::placeholder{color:var(--text-muted);}
 .toolbar select{min-width:140px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e93a0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
 .spacer{flex:1;}
+
 .empty-state{text-align:center;padding:48px 24px;color:var(--text-faint);font-size:13px;}
 .empty-state::before{content:'⊘';display:block;font-size:32px;margin-bottom:12px;opacity:0.3;}
 .muted{color:var(--text-faint);}
@@ -170,6 +171,7 @@ tbody tr:hover .row-actions{opacity:1;}
 .form-row input:focus, .form-row select:focus, .form-row textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ghost);background:var(--panel);}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .modal-foot{padding:16px 22px;border-top:1px solid var(--border-subtle);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--panel);z-index:2;border-radius:0 0 var(--radius-lg) var(--radius-lg);}
+
 .warn-banner{background:var(--warn-soft);border:1px solid rgba(196,148,26,0.15);color:var(--warn);padding:12px 14px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:14px;font-weight:500;}
 .section-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-faint);font-family:var(--font-mono);margin:20px 0 10px 0;display:flex;justify-content:space-between;align-items:center;font-weight:500;}
 .chart-wrap{position:relative;height:240px;}
@@ -186,18 +188,20 @@ tbody tr:hover .row-actions{opacity:1;}
 .mini-form .form-row{margin-bottom:0;}
 .bom-row{display:grid;grid-template-columns:1fr 100px 80px auto;gap:8px;align-items:end;margin-bottom:10px;}
 .tier-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:10px;}
+
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-thumb{background:#d0d3da;border-radius:8px;border:2px solid transparent;background-clip:padding-box;}
 ::-webkit-scrollbar-thumb:hover{background:#b8bcc4;}
 ::-webkit-scrollbar-track{background:transparent;}
-/* ─── Animations ─── */
+
+/* Animations */
 @keyframes fadeIn{
   from{opacity:0;transform:translateY(6px);}
   to{opacity:1;transform:translateY(0);}
 }
 #content > *{animation:fadeIn 0.3s ease-out;}
 
-/* ─── Responsive ─── */
+/* Responsive */
 @media (max-width:1024px){
   .two-col{grid-template-columns:1fr;}
   .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
@@ -213,6 +217,7 @@ tbody tr:hover .row-actions{opacity:1;}
   .modal{width:100%;max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:85vh;position:fixed;bottom:0;}
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 <div id="app">
@@ -457,7 +462,7 @@ function renderView(){
   document.getElementById('topMeta').textContent = ROLES[currentRole].label + ' · ' + fmtDate(new Date());
   const content = document.getElementById('content');
   if(!ROLES[currentRole].modules.includes(currentView)){
-    content.innerHTML = `<div class="access-denied"><h2>Access Restricted</h2><p>${ROLES[currentRole].label} does not have permission to view this module.</p></div>`;
+    content.innerHTML = `<div class="access-denied"><h2>No access</h2><p>${ROLES[currentRole].label} does not have permission to view this module.</p></div>`;
     return;
   }
   const renderers = {dashboard:renderDashboard, items:renderItems, shops:renderShops, suppliers:renderSuppliers, purchases:renderPurchases, production:renderProduction, sales:renderSales, availability:renderAvailability, reports:renderReports, settings:renderSettings};
@@ -525,8 +530,8 @@ function renderDashboard(){
   sales.forEach(s=>{ revByShop[s.shop_id] = (revByShop[s.shop_id]||0) + saleTotal(s); });
   const labels = Object.keys(revByShop).map(id=>{ const sh = shops.find(s=>s.id===id); return sh?sh.name:'—'; });
   new Chart(document.getElementById('chartShopRevenue'), {
-    type:'bar', data:{labels, datasets:[{label:'Revenue', data:Object.values(revByShop), backgroundColor:'#c97a2e', borderRadius:4, barThickness:28}]},
-    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5e6370',font:{size:10, family:"'IBM Plex Sans', sans-serif"}, maxRotation:45},grid:{display:false}}, y:{ticks:{color:'#5e6370',font:{size:10, family:"'IBM Plex Sans', sans-serif"}, callback:v=>'Rs. '+v.toLocaleString()},grid:{color:'#eceef2', borderDash:[4,4]}}}}
+    type:'bar', data:{labels, datasets:[{label:'Revenue', data:Object.values(revByShop), backgroundColor:'#c97a2e', borderRadius:3}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170',font:{size:10}},grid:{display:false}}, y:{ticks:{color:'#5b6170',font:{size:10}},grid:{color:'#eceef2'}}}}
   });
 }
 
@@ -676,7 +681,7 @@ function renderBomRows(simpleItems){
         ${simpleItems.map(si=>`<option value="${si.id}" ${row.ingredient_item_id===si.id?'selected':''}>${si.name}</option>`).join('')}
       </select>
       <input type="number" step="0.0001" placeholder="Qty" value="${row.qty_per_batch||''}" onchange="modalState.bom[${idx}].qty_per_batch=this.value">
-      <input value="${ing?ing.unit||'—':'—'}" disabled style="background:var(--panel-3);color:var(--text-faint);text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;">
+      <input value="${ing?ing.unit||'—':'—'}" disabled style="background:var(--panel-2);color:var(--text-faint);text-align:center;">
       <button class="btn small danger" onclick="removeBomRow(${idx})">✕</button>
     </div>`;
   }).join('');
@@ -1166,11 +1171,11 @@ function renderReports(){
   const sales = DATA.api.getSales(); const purchases = DATA.api.getPurchases();
   const cashIn = sales.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
   const cashOut = purchases.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
-  new Chart(document.getElementById('chartCashFlow'), {type:'bar', data:{labels:['Inflow (Payments In)','Outflow (Payments Out)'], datasets:[{data:[cashIn,cashOut], backgroundColor:['#1e8a4e','#c9402e'], borderRadius:4, barThickness:40}]}, options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5e6370',font:{size:11, family:"'IBM Plex Sans', sans-serif"}},grid:{display:false}}, y:{ticks:{color:'#5e6370',font:{size:10, family:"'IBM Plex Sans', sans-serif"}, callback:v=>'Rs. '+v.toLocaleString()},grid:{color:'#eceef2', borderDash:[4,4]}}}});
+  new Chart(document.getElementById('chartCashFlow'), {type:'bar', data:{labels:['Inflow (Payments In)','Outflow (Payments Out)'], datasets:[{data:[cashIn,cashOut], backgroundColor:['#268a4e','#c4422e'], borderRadius:3}]}, options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170'},grid:{display:false}}, y:{ticks:{color:'#5b6170'},grid:{color:'#eceef2'}}}}});
 
   const byItem = {}; sales.forEach(s=>{ getLines(s).forEach(l=>{ byItem[l.item_id] = (byItem[l.item_id]||0)+Number(l.qty); }); });
   const items = DATA.api.getItems();
-  new Chart(document.getElementById('chartProductPerf'), {type:'doughnut', data:{labels:Object.keys(byItem).map(id=>{const it=items.find(i=>i.id===id); return it?it.name:'—';}), datasets:[{data:Object.values(byItem), backgroundColor:['#c97a2e','#e08a3a','#1e8a4e','#3a7ea0','#c4941a'], borderWidth:0, hoverOffset:4}]}, options:{plugins:{legend:{labels:{color:'#1a1d2b',font:{size:11, family:"'IBM Plex Sans', sans-serif"}, padding:16, usePointStyle:true, pointStyle:'circle'}}}, cutout:'65%'}});
+  new Chart(document.getElementById('chartProductPerf'), {type:'doughnut', data:{labels:Object.keys(byItem).map(id=>{const it=items.find(i=>i.id===id); return it?it.name:'—';}), datasets:[{data:Object.values(byItem), backgroundColor:['#c97a2e','#e8923f','#268a4e','#3a7ea0','#b8841a']}]}, options:{plugins:{legend:{labels:{color:'#1f2430',font:{size:11}}}}}});
 
   const shops = DATA.api.getShops();
   const revByShop = shops.map(s=>({name:s.name, rev: sales.filter(x=>x.shop_id===s.id).reduce((sum,x)=>sum+saleTotal(x),0)})).sort((a,b)=>b.rev-a.rev);
@@ -1248,4 +1253,5 @@ renderNav();
 renderView();
 </script>
 </body>
+
 </html>
