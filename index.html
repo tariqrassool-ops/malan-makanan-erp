@@ -196,10 +196,11 @@ let DB = {
   purchases: [],         // {..., payments:[], returns:[]}
   sales: [],              // {..., payments:[], returns:[]}
   production_batches: [],
+  units: ['pcs','kg','g','ml','l','cylinders','pack'], // editable unit-of-measure list, extendable via the '+' button
 };
 
 function loadFromStorage(){
-  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ DB = JSON.parse(raw); if(!Array.isArray(DB.suppliers)) DB.suppliers = []; } }
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ DB = JSON.parse(raw); if(!Array.isArray(DB.suppliers)) DB.suppliers = []; if(!Array.isArray(DB.units)) DB.units = ['pcs','kg','g','ml','l','cylinders','pack']; } }
   catch(e){ console.warn('Could not load saved data', e); }
 }
 function saveToStorage(){
@@ -522,7 +523,12 @@ function openItemModal(editId){
       <div class="form-row"><label>SKU</label><input id="f_sku" value="${editing?editing.sku||'':''}"></div>
     </div>
     <div class="form-grid">
-      <div class="form-row"><label>Unit Type</label><input id="f_unit" value="${editing?editing.unit||'':''}" placeholder="kg, pcs, g, ml..."></div>
+      <div class="form-row"><label>Unit Type</label>
+        <div style="display:flex;gap:6px;">
+          <select id="f_unit" style="flex:1;"></select>
+          <button type="button" class="btn secondary small" onclick="promptAddUnit()" title="Add a new unit" style="flex-shrink:0;">+</button>
+        </div>
+      </div>
       <div class="form-row"><label>Category</label><input id="f_category" value="${editing?editing.category||'':''}"></div>
     </div>
     <div class="form-grid">
@@ -549,10 +555,24 @@ function openItemModal(editId){
     <div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div>
   `;
   showModal(editing?'Edit Item':'Add Item', body, () => saveItem(editId));
+  if(editing && editing.unit && !DB.units.includes(editing.unit)) DB.units.push(editing.unit); // preserve any older free-typed unit
+  refreshUnitDropdown(editing ? editing.unit : DB.units[0]);
   toggleItemTypeSections();
   renderBomRows(simpleItems);
   renderTierRows();
   renderAltUomRow();
+}
+function refreshUnitDropdown(selectedValue){
+  const sel = document.getElementById('f_unit');
+  if(!sel) return;
+  sel.innerHTML = DB.units.map(u=>`<option value="${u}" ${u===selectedValue?'selected':''}>${u}</option>`).join('');
+}
+function promptAddUnit(){
+  const newUnit = prompt('New unit name (e.g. liters, dozen, box):');
+  if(!newUnit || !newUnit.trim()) return;
+  const trimmed = newUnit.trim();
+  if(!DB.units.includes(trimmed)){ DB.units.push(trimmed); saveToStorage(); }
+  refreshUnitDropdown(trimmed);
 }
 function renderAltUomRow(){
   const a = modalState.altUom || {name:'', factor:''};
@@ -575,17 +595,36 @@ function toggleItemTypeSections(){
   document.getElementById('altUomSection').style.display = type!=='non_inventory' ? 'block' : 'none';
 }
 function renderBomRows(simpleItems){
-  document.getElementById('bomRows').innerHTML = modalState.bom.map((row,idx)=>`
-    <div class="bom-row">
-      <select onchange="modalState.bom[${idx}].ingredient_item_id=this.value">
+  if(!simpleItems.length){
+    document.getElementById('bomRows').innerHTML = '<p class="muted" style="font-size:12px;">Add Simple ingredient items first, before building a BOM.</p>';
+    return;
+  }
+  document.getElementById('bomRows').innerHTML = modalState.bom.map((row,idx)=>{
+    const ing = simpleItems.find(si=>si.id===row.ingredient_item_id);
+    return `<div class="bom-row">
+      <select onchange="onBomRowItemChange(${idx}, this.value)">
         ${simpleItems.map(si=>`<option value="${si.id}" ${row.ingredient_item_id===si.id?'selected':''}>${si.name}</option>`).join('')}
       </select>
-      <input type="number" placeholder="Qty" value="${row.qty_per_batch||''}" onchange="modalState.bom[${idx}].qty_per_batch=this.value">
-      <input placeholder="Unit" value="${row.unit||''}" onchange="modalState.bom[${idx}].unit=this.value">
+      <input type="number" step="0.0001" placeholder="Qty" value="${row.qty_per_batch||''}" onchange="modalState.bom[${idx}].qty_per_batch=this.value">
+      <input value="${ing?ing.unit||'—':'—'}" disabled style="background:var(--panel-2);color:var(--text-faint);text-align:center;">
       <button class="btn small danger" onclick="removeBomRow(${idx})">✕</button>
-    </div>`).join('') || '<p class="muted" style="font-size:12px;">No ingredients added yet.</p>';
+    </div>`;
+  }).join('');
 }
-function addBomRow(){ modalState.bom.push({ingredient_item_id:'', qty_per_batch:'', unit:''}); renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished')); }
+function onBomRowItemChange(idx, itemId){
+  modalState.bom[idx].ingredient_item_id = itemId;
+  const ing = DB.items.find(i=>i.id===itemId);
+  modalState.bom[idx].unit = ing ? ing.unit : '';
+  renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished'));
+}
+function addBomRow(){
+  const simpleItems = DB.items.filter(i=>i.type==='simple'||i.type==='finished');
+  if(!simpleItems.length){ alert('Add a Simple ingredient item first, under Items.'); return; }
+  // Default the new row to whatever the dropdown will visually show (its first option),
+  // so a row is never silently dropped just because the user didn't have to touch the dropdown.
+  modalState.bom.push({ingredient_item_id: simpleItems[0].id, qty_per_batch:'', unit: simpleItems[0].unit});
+  renderBomRows(simpleItems);
+}
 function removeBomRow(idx){ modalState.bom.splice(idx,1); renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished')); }
 function renderTierRows(){
   document.getElementById('tierRows').innerHTML = modalState.tiers.map((t,idx)=>`
@@ -722,7 +761,8 @@ let purchaseLineState = [];
 function openPurchaseModal(editId){
   const editing = editId ? DB.purchases.find(p=>p.id===editId) : null;
   if(!DB.suppliers.length){ alert('Add a Supplier first, under the Suppliers tab.'); return; }
-  purchaseLineState = editing ? JSON.parse(JSON.stringify(getLines(editing))) : [{item_id:'', qty:'', unit_cost:''}];
+  if(!DB.items.length){ alert('Add an Item first, under the Items tab.'); return; }
+  purchaseLineState = editing ? JSON.parse(JSON.stringify(getLines(editing))) : [{item_id: DB.items[0].id, qty:'', unit_cost: DB.items[0].avg_cost||''}];
   const supplierOpts = DB.suppliers.map(s=>`<option value="${s.id}" ${editing&&editing.supplier_id===s.id?'selected':''}>${s.name}</option>`).join('');
   showModal(editing?'Edit Purchase':'New Purchase', `
     <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Supplier</label><select id="f_supplier">${supplierOpts}</select></div></div>
@@ -732,7 +772,7 @@ function openPurchaseModal(editId){
     <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
   `, () => {
     const lines = purchaseLineState.filter(l=>l.item_id && l.qty);
-    if(!lines.length){ alert('Add at least one line item.'); return; }
+    if(!lines.length){ alert('Add at least one line item with a quantity.'); return; }
     const fields = {date:val('f_date'), supplier_id:val('f_supplier'), lines, notes:val('f_notes')};
     if(editId) DATA.api.updatePurchase(editId, fields); else DATA.api.createPurchase(fields);
     closeModal(); renderView();
@@ -741,17 +781,22 @@ function openPurchaseModal(editId){
 }
 function renderPurchaseLineRows(){
   document.getElementById('purchaseLineRows').innerHTML = purchaseLineState.map((line,idx)=>{
+    const item = DB.items.find(i=>i.id===line.item_id);
     const itemOpts = DB.items.map(i=>`<option value="${i.id}" ${line.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
     return `<div class="bom-row">
       <select onchange="onPurchaseLineItemChange(${idx}, this.value)">${itemOpts}</select>
-      <input type="number" step="0.0001" placeholder="Qty" value="${line.qty}" onchange="purchaseLineState[${idx}].qty=this.value; updatePurchaseLineTotal();">
+      <input type="number" step="0.0001" placeholder="Qty${item&&item.unit?' ('+item.unit+')':''}" value="${line.qty}" onchange="purchaseLineState[${idx}].qty=this.value; updatePurchaseLineTotal();">
       <input type="number" step="0.0001" placeholder="Unit Cost" value="${line.unit_cost}" onchange="purchaseLineState[${idx}].unit_cost=this.value; updatePurchaseLineTotal();">
       <button class="btn small danger" onclick="removePurchaseLine(${idx})">✕</button>
     </div>`;
   }).join('');
   updatePurchaseLineTotal();
 }
-function addPurchaseLine(){ purchaseLineState.push({item_id:'', qty:'', unit_cost:''}); renderPurchaseLineRows(); }
+function addPurchaseLine(){
+  if(!DB.items.length){ alert('Add an Item first, under the Items tab.'); return; }
+  purchaseLineState.push({item_id: DB.items[0].id, qty:'', unit_cost: DB.items[0].avg_cost||''});
+  renderPurchaseLineRows();
+}
 function removePurchaseLine(idx){ if(purchaseLineState.length===1){ alert('A purchase needs at least one line item.'); return; } purchaseLineState.splice(idx,1); renderPurchaseLineRows(); }
 function onPurchaseLineItemChange(idx, itemId){
   purchaseLineState[idx].item_id = itemId;
@@ -887,10 +932,21 @@ function renderSales(){
 function deleteSaleConfirm(id){ if(confirm('Delete this sale and all its payments/returns?')){ DATA.api.deleteSale(id); renderView(); } }
 
 let saleLineState = [];
+function defaultSaleLine(item){
+  if(!item) return {item_id:'', entry_qty:'', entry_unit:'base', unit_price:''};
+  return {
+    item_id: item.id,
+    entry_qty: '',
+    entry_unit: (item.alt_uom && item.alt_uom.factor) ? 'alt' : 'base',
+    unit_price: (item.price_tiers && item.price_tiers.length) ? item.price_tiers[0].price : ''
+  };
+}
 function openSaleModal(editId){
   const editing = editId ? DB.sales.find(s=>s.id===editId) : null;
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ alert('Add a Simple or Finished Good item first, under Items.'); return; }
   const shopOpts = DB.shops.filter(s=>s.status==='active').map(s=>`<option value="${s.id}" ${editing&&editing.shop_id===s.id?'selected':''}>${s.name}</option>`).join('');
-  saleLineState = editing ? JSON.parse(JSON.stringify(getLines(editing).map(l=>({item_id:l.item_id, entry_qty: l.entry_qty!==undefined?l.entry_qty:l.qty, entry_unit: l.entry_unit||'base', unit_price:l.unit_price})))) : [{item_id:'', entry_qty:'', entry_unit:'base', unit_price:''}];
+  saleLineState = editing ? JSON.parse(JSON.stringify(getLines(editing).map(l=>({item_id:l.item_id, entry_qty: l.entry_qty!==undefined?l.entry_qty:l.qty, entry_unit: l.entry_unit||'base', unit_price:l.unit_price})))) : [defaultSaleLine(sellableItems[0])];
   showModal(editing?'Edit Sale':'New Sale', `
     <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Customer</label><select id="f_shop">${shopOpts}</select></div></div>
     <div class="section-title">Line Items<button class="btn small secondary" onclick="addSaleLine()">+ Add Item</button></div>
@@ -904,7 +960,7 @@ function openSaleModal(editId){
       const baseQty = (item && item.alt_uom && l.entry_unit==='alt') ? Number(l.entry_qty)*Number(item.alt_uom.factor) : Number(l.entry_qty);
       return {item_id:l.item_id, qty: baseQty, entry_qty: Number(l.entry_qty), entry_unit: l.entry_unit, unit_price: Number(l.unit_price)||0};
     });
-    if(!lines.length){ alert('Add at least one line item.'); return; }
+    if(!lines.length){ alert('Add at least one line item with a quantity.'); return; }
     const fields = {date:val('f_date'), shop_id:val('f_shop'), lines, type:val('f_type'), notes:val('f_notes')};
     if(editId) DATA.api.updateSale(editId, fields); else DATA.api.createSale(fields);
     closeModal(); renderView();
@@ -933,7 +989,12 @@ function renderSaleLineRows(){
   const el = document.getElementById('saleLineTotal');
   if(el) el.textContent = fmt(total);
 }
-function addSaleLine(){ saleLineState.push({item_id:'', entry_qty:'', entry_unit:'base', unit_price:''}); renderSaleLineRows(); }
+function addSaleLine(){
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ alert('Add a Simple or Finished Good item first, under Items.'); return; }
+  saleLineState.push(defaultSaleLine(sellableItems[0]));
+  renderSaleLineRows();
+}
 function removeSaleLine(idx){ if(saleLineState.length===1){ alert('A sale needs at least one line item.'); return; } saleLineState.splice(idx,1); renderSaleLineRows(); }
 function onSaleLineItemChange(idx, itemId){
   saleLineState[idx].item_id = itemId;
