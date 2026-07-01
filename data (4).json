@@ -1,0 +1,236 @@
+{
+  "items": [
+    {
+      "name": "SUGAR",
+      "type": "simple",
+      "sku": "SUGAR-001",
+      "unit": "kg",
+      "category": "Ingredients",
+      "min_stock": 0,
+      "avg_cost": 250,
+      "status": "active",
+      "bom": [],
+      "price_tiers": [],
+      "alt_uom": null,
+      "id": "IT-fn6tpa"
+    },
+    {
+      "name": "MILK",
+      "type": "simple",
+      "sku": "MILK-001",
+      "unit": "kg",
+      "category": "Ingredients",
+      "min_stock": 0,
+      "avg_cost": 2500,
+      "status": "active",
+      "bom": [],
+      "price_tiers": [],
+      "alt_uom": null,
+      "id": "IT-3d4p7n"
+    },
+    {
+      "name": "BUTTER",
+      "type": "simple",
+      "sku": "BUTTER-001",
+      "unit": "kg",
+      "category": "Ingredients",
+      "min_stock": 0,
+      "avg_cost": 2400,
+      "status": "active",
+      "bom": [],
+      "price_tiers": [],
+      "alt_uom": {
+        "name": "g",
+        "factor": 1
+      },
+      "id": "IT-uiyneb"
+    },
+    {
+      "name": "Milk Toffee (1 Pc)",
+      "type": "finished",
+      "sku": "MT-001",
+      "unit": "pcs",
+      "category": "FG",
+      "min_stock": 0,
+      "avg_cost": 10.73,
+      "status": "active",
+      "batch_size": 325,
+      "shelf_life_days": 90,
+      "bom": [
+        {
+          "ingredient_item_id": "IT-fn6tpa",
+          "qty_per_batch": "3",
+          "unit": "kg"
+        },
+        {
+          "ingredient_item_id": "IT-3d4p7n",
+          "qty_per_batch": "1",
+          "unit": "kg"
+        },
+        {
+          "ingredient_item_id": "IT-uiyneb",
+          "qty_per_batch": "0.100",
+          "unit": "kg"
+        }
+      ],
+      "price_tiers": [],
+      "alt_uom": null,
+      "id": "IT-43r01a"
+    }
+  ],
+  "shops": [
+    {
+      "name": "Customer 1",
+      "owner": "",
+      "phone": "",
+      "district": "",
+      "address": "",
+      "status": "active",
+      "id": "S-0iivts"
+    }
+  ],
+  "purchases": [
+    {
+      "date": "2026-06-24",
+      "supplier_id": "SUP-fqi7yy",
+      "lines": [
+        {
+          "item_id": "IT-fn6tpa",
+          "qty": "3",
+          "unit_cost": 250
+        },
+        {
+          "item_id": "IT-3d4p7n",
+          "qty": "1",
+          "unit_cost": "2500"
+        },
+        {
+          "item_id": "IT-uiyneb",
+          "qty": "0.100",
+          "unit_cost": "240"
+        }
+      ],
+      "notes": "",
+      "id": "PU-o0qrvd",
+      "payments": [
+        {
+          "date": "2026-06-24",
+          "amount": 3274,
+          "method": "cash",
+          "reference": "",
+          "id": "PAY-8jgk0n"
+        }
+      ],
+      "returns": []
+    }
+  ],
+  "sales": [
+    {
+      "date": "2026-06-24",
+      "shop_id": "S-0iivts",
+      "lines": [
+        {
+          "item_id": "IT-43r01a",
+          "qty": 15,
+          "entry_qty": 15,
+          "entry_unit": "base",
+          "unit_price": 20
+        }
+      ],
+      "type": "direct_sale",
+      "notes": "",
+      "id": "SA-ltpg7z",
+      "payments": [
+        {
+          "date": "2026-06-24",
+          "amount": 300,
+          "method": "cash",
+          "reference": "",
+          "id": "PAY-ba6sn2"
+        }
+      ],
+      "returns": []
+    },
+    {
+      "date": "2026-06-24",
+      "shop_id": "S-0iivts",
+      "lines": [
+        {
+          "item_id": "IT-43r01a",
+          "qty": 310,
+          "entry_qty": 310,
+          "entry_unit": "base",
+          "unit_price": 20
+        }
+      ],
+      "type": "direct_sale",
+      "notes": "",
+      "id": "SA-gbwn3z",
+      "payments": [
+        {
+          "date": "2026-06-24",
+          "amount": 6200,
+          "method": "cash",
+          "reference": "",
+          "id": "PAY-fmrkrr"
+        }
+      ],
+      "returns": []
+    }
+  ],
+  "production_batches": [
+    {
+      "batch_number": "",
+      "date": "2026-06-24",
+      "item_id": "IT-43r01a",
+      "qty_produced": 325,
+      "packaging_cost": 0,
+      "gas_cost": 0,
+      "labor_cost": 0,
+      "notes": "",
+      "override": false,
+      "id": "B-t430v6",
+      "stock_override": false,
+      "expiry_date": "2026-09-22",
+      "consumed": [
+        {
+          "item_id": "IT-fn6tpa",
+          "qty": 3,
+          "unit_cost": 250
+        },
+        {
+          "item_id": "IT-3d4p7n",
+          "qty": 1,
+          "unit_cost": 2500
+        },
+        {
+          "item_id": "IT-uiyneb",
+          "qty": 0.1,
+          "unit_cost": 2400
+        }
+      ],
+      "ingredient_cost": 3490,
+      "total_cost": 3490,
+      "unit_cost": 10.738461538461538
+    }
+  ],
+  "suppliers": [
+    {
+      "name": "Supplier 1",
+      "contact": "",
+      "phone": "",
+      "address": "",
+      "status": "active",
+      "id": "SUP-fqi7yy"
+    }
+  ],
+  "units": [
+    "pcs",
+    "kg",
+    "g",
+    "ml",
+    "l",
+    "cylinders",
+    "pack"
+  ]
+}
