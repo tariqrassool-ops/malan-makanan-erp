@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malan Makanan — Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f6f7f4;
+  --bg-warm:#f0f2ec;
+  --panel:#ffffff;
+  --panel-2:#f8f9f6;
+  --panel-3:#eef0ea;
+  --border:#e2e5dc;
+  --border-subtle:#eceee6;
+  --text:#1a1f1a;
+  --text-dim:#5a6358;
+  --text-faint:#8a9486;
+  --text-muted:#b0b8aa;
+  --accent:#c9b87a;
+  --accent-light:#d4c896;
+  --accent-hover:#b8a76a;
+  --accent-soft:#f5f0e0;
+  --accent-ghost:rgba(201,184,122,0.12);
+  --good:#4a8f6d;
+  --good-soft:#e6f2eb;
+  --good-ghost:rgba(74,143,109,0.08);
+  --warn:#c9a84c;
+  --warn-soft:#f7f1e0;
+  --warn-ghost:rgba(201,168,76,0.08);
+  --bad:#c45c4a;
+  --bad-soft:#f5e8e5;
+  --bad-ghost:rgba(196,92,74,0.08);
+  --info:#5a8fa0;
+  --info-soft:#e8f1f4;
+  --brand-navy:#1a2332;
+  --brand-gold:#c9b87a;
+  --brand-gold-light:#d4c896;
+  --radius-sm:14px;
+  --radius:20px;
+  --radius-lg:28px;
+  --radius-xl:40px;
+  --radius-pill:999px;
+  --shadow-sm:0 1px 3px rgba(26,31,26,0.04), 0 1px 2px rgba(26,31,26,0.02);
+  --shadow:0 4px 20px rgba(26,31,26,0.06), 0 1px 3px rgba(26,31,26,0.03);
+  --shadow-md:0 8px 32px rgba(26,31,26,0.08), 0 2px 8px rgba(26,31,26,0.04);
+  --shadow-lg:0 16px 48px rgba(26,31,26,0.10), 0 4px 12px rgba(26,31,26,0.05);
+  --font-display:'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:'IBM Plex Mono', 'SF Mono', 'SFMono-Regular', Consolas, monospace;
+  --transition-fast:0.2s cubic-bezier(0.4,0,0.2,1);
+  --transition:0.3s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:0.5s cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-display);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Decorative background blobs */
+.bg-blob{
+  position:fixed;
+  border-radius:50%;
+  filter:blur(80px);
+  opacity:0.35;
+  pointer-events:none;
+  z-index:0;
+  transition:transform 8s ease-in-out infinite;
+}
+.blob-1{
+  width:500px;height:500px;
+  background:linear-gradient(135deg, #c8ddd4, #a8c8b8);
+  top:-150px;right:-100px;
+  animation:float1 12s ease-in-out infinite;
+}
+.blob-2{
+  width:400px;height:400px;
+  background:linear-gradient(135deg, #d4c8a8, #c8d4b8);
+  bottom:-100px;left:-80px;
+  animation:float2 15s ease-in-out infinite;
+}
+.blob-3{
+  width:300px;height:300px;
+  background:linear-gradient(135deg, #b8c8d4, #c8d4c8);
+  top:40%;left:30%;
+  animation:float3 18s ease-in-out infinite;
+}
+@keyframes float1{
+  0%,100%{transform:translate(0,0) scale(1);}
+  33%{transform:translate(30px,-20px) scale(1.05);}
+  66%{transform:translate(-20px,15px) scale(0.95);}
+}
+@keyframes float2{
+  0%,100%{transform:translate(0,0) scale(1);}
+  33%{transform:translate(-25px,20px) scale(1.08);}
+  66%{transform:translate(15px,-15px) scale(0.92);}
+}
+@keyframes float3{
+  0%,100%{transform:translate(0,0) scale(1);}
+  50%{transform:translate(20px,20px) scale(1.1);}
+}
+
+/* Top Navigation */
+#topnav{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:72px;
+  background:rgba(26,35,50,0.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(201,184,122,0.15);
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 40px;
+}
+.nav-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.nav-brand-mark{
+  width:40px;height:40px;
+  border-radius:50%;
+  overflow:hidden;
+  flex-shrink:0;
+  box-shadow:0 2px 8px rgba(26,35,50,0.3);
+}
+.nav-brand-mark img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+}
+.nav-brand-text{
+  font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#f0ead6;
+}
+.nav-brand-sub{
+  font-size:10px;color:var(--brand-gold);letter-spacing:0.08em;text-transform:uppercase;
+  font-family:var(--font-mono);font-weight:500;opacity:0.8;
+}
+.nav-links{
+  display:flex;align-items:center;gap:6px;
+}
+.nav-link{
+  padding:8px 18px;
+  border-radius:var(--radius-pill);
+  font-size:13.5px;font-weight:500;color:rgba(240,234,214,0.7);
+  cursor:pointer;transition:all var(--transition-fast);
+  border:none;background:transparent;
+  font-family:var(--font-display);
+  position:relative;
+}
+.nav-link:hover{
+  color:#f0ead6;
+  background:rgba(201,184,122,0.1);
+}
+.nav-link.active{
+  color:#1a2332;
+  background:var(--accent);
+  font-weight:600;
+}
+.nav-right{
+  display:flex;align-items:center;gap:16px;
+}
+.role-pill{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(201,184,122,0.2);
+  color:rgba(240,234,214,0.8);
+  font-size:12px;font-weight:500;
+  padding:8px 18px;
+  border-radius:var(--radius-pill);
+  font-family:var(--font-display);
+  cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d4c896' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:34px;
+  transition:all var(--transition-fast);
+}
+.role-pill:hover{border-color:var(--brand-gold);}
+.role-pill:focus{outline:none;border-color:var(--brand-gold);box-shadow:0 0 0 3px rgba(201,184,122,0.2);}
+
+/* Main Content */
+#main{
+  padding-top:72px;
+  position:relative;
+  z-index:1;
+}
+.page-header{
+  padding:40px 40px 24px;
+  max-width:1400px;margin:0 auto;
+}
+.page-header h1{
+  font-size:32px;font-weight:700;letter-spacing:-0.03em;
+  color:var(--text);line-height:1.2;
+}
+.page-header .meta{
+  font-size:12px;color:var(--text-faint);
+  font-family:var(--font-mono);font-weight:500;
+  margin-top:6px;letter-spacing:0.02em;
+}
+#content{
+  padding:0 40px 40px;
+  max-width:1400px;margin:0 auto;
+  min-height:calc(100vh - 72px);
+}
+
+/* KPI Cards */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  margin-bottom:32px;
+}
+.kpi-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow-sm);
+  transition:all var(--transition);
+  position:relative;
+  overflow:hidden;
+}
+.kpi-card:hover{
+  box-shadow:var(--shadow);
+  transform:translateY(-2px);
+}
+.kpi-card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:4px;
+  background:transparent;
+  transition:background var(--transition);
+}
+.kpi-card.alert::before{background:var(--warn);}
+.kpi-card.danger::before{background:var(--bad);}
+.kpi-card.positive::before{background:var(--good);}
+.kpi-card.accent::before{background:var(--accent);}
+.kpi-label{
+  font-size:11px;color:var(--text-faint);
+  text-transform:uppercase;letter-spacing:0.08em;
+  font-family:var(--font-mono);font-weight:500;
+  margin-bottom:10px;
+}
+.kpi-value{
+  font-size:26px;font-weight:700;font-family:var(--font-mono);
+  letter-spacing:-0.02em;color:var(--text);
+}
+.kpi-card.alert .kpi-value{color:var(--warn);}
+.kpi-card.danger .kpi-value{color:var(--bad);}
+.kpi-card.positive .kpi-value{color:var(--good);}
+.kpi-card.accent .kpi-value{color:var(--accent);}
+
+/* Panels */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:24px;
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow var(--transition);
+}
+.panel:hover{box-shadow:var(--shadow);}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;
+  border-bottom:1px solid var(--border-subtle);
+  background:var(--panel);
+}
+.panel-head h2{
+  font-size:16px;font-weight:600;color:var(--text);
+  letter-spacing:-0.01em;
+}
+.panel-head .sub{
+  font-size:12px;color:var(--text-faint);margin-top:2px;font-weight:400;
+}
+.panel-body{padding:24px;}
+.two-col{
+  display:grid;
+  grid-template-columns:1.4fr 1fr;
+  gap:20px;
+}
+
+/* Buttons */
+.btn{
+  background:var(--accent);
+  color:#1a2332;border:none;
+  padding:10px 22px;
+  border-radius:var(--radius-pill);
+  font-size:13.5px;font-weight:600;
+  cursor:pointer;font-family:var(--font-display);
+  transition:all var(--transition-fast);
+  display:inline-flex;align-items:center;gap:8px;
+  letter-spacing:0.01em;
+  position:relative;overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,0);
+  transition:background var(--transition-fast);
+}
+.btn:hover{
+  background:var(--accent-hover);
+  transform:translateY(-1px);
+  box-shadow:0 4px 16px rgba(201,184,122,0.25);
+}
+.btn:hover::after{background:rgba(255,255,255,0.06);}
+.btn:active{transform:translateY(0);box-shadow:none;}
+.btn.secondary{
+  background:var(--panel-2);
+  color:var(--text-dim);
+  border:1px solid var(--border);
+  box-shadow:none;
+}
+.btn.secondary:hover{
+  background:var(--panel-3);
+  color:var(--text);
+  border-color:var(--text-faint);
+  box-shadow:var(--shadow-sm);
+}
+.btn.small{padding:7px 16px;font-size:12.5px;}
+.btn.danger{background:var(--bad);color:#fff;box-shadow:none;}
+.btn.danger:hover{background:#a84a3a;box-shadow:0 4px 16px rgba(196,92,74,0.25);}
+.btn.ghost{
+  background:transparent;color:var(--text-faint);
+  border:1px solid var(--border);box-shadow:none;
+}
+.btn.ghost:hover{color:var(--text);border-color:var(--text-faint);background:var(--panel-2);}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  text-align:left;font-size:10px;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text-faint);
+  font-family:var(--font-mono);font-weight:500;
+  padding:12px 16px;
+  border-bottom:1px solid var(--border-subtle);
+  background:var(--panel-2);
+  white-space:nowrap;
+}
+tbody td{
+  padding:14px 16px;
+  border-bottom:1px solid var(--border-subtle);
+  color:var(--text);
+  transition:background var(--transition-fast);
+}
+tbody tr:hover td{background:var(--panel-2);}
+tbody tr:last-child td{border-bottom:none;}
+td.num, th.num{text-align:right;font-family:var(--font-mono);}
+.row-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  opacity:0;transition:opacity var(--transition-fast);
+}
+tbody tr:hover .row-actions{opacity:1;}
+
+/* Pills */
+.pill{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:600;
+  padding:4px 12px;border-radius:var(--radius-pill);
+  font-family:var(--font-mono);letter-spacing:0.01em;
+  line-height:1.3;
+}
+.pill.good{background:var(--good-soft);color:var(--good);}
+.pill.warn{background:var(--warn-soft);color:var(--warn);}
+.pill.bad{background:var(--bad-soft);color:var(--bad);}
+.pill.neutral{background:var(--panel-2);color:var(--text-dim);border:1px solid var(--border);}
+.pill.info{background:var(--info-soft);color:var(--info);}
+
+/* Toolbar */
+.toolbar{
+  display:flex;gap:12px;align-items:center;
+  margin-bottom:20px;flex-wrap:wrap;
+}
+.toolbar input, .toolbar select{
+  background:var(--panel);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 16px;
+  border-radius:var(--radius-pill);
+  font-size:13.5px;
+  font-family:var(--font-display);
+  transition:all var(--transition-fast);
+  min-width:220px;
+}
+.toolbar input:focus, .toolbar select:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-ghost);
+}
+.toolbar input::placeholder{color:var(--text-muted);}
+.toolbar select{
+  min-width:160px;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a9486' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:36px;
+}
+.spacer{flex:1;}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:56px 24px;
+  color:var(--text-faint);font-size:14px;
+}
+.empty-state::before{
+  content:'⊘';display:block;font-size:36px;
+  margin-bottom:12px;opacity:0.3;
+}
+.muted{color:var(--text-faint);}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(26,31,26,0.35);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;
+  z-index:200;padding:24px;
+  opacity:0;
+  transition:opacity 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.modal-overlay.open{
+  display:flex;opacity:1;
+}
+.modal{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  width:620px;max-width:100%;
+  max-height:88vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  transform:translateY(20px) scale(0.96);
+  opacity:0;
+  transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+}
+.modal-overlay.open .modal{
+  transform:translateY(0) scale(1);
+  opacity:1;
+}
+.modal.closing .modal{
+  transform:translateY(-10px) scale(0.98);
+  opacity:0;
+  transition:transform 0.3s ease, opacity 0.25s ease;
+}
+.modal-head{
+  padding:22px 28px;
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:var(--panel);
+  z-index:2;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+}
+.modal-head h3{
+  font-size:18px;font-weight:700;letter-spacing:-0.02em;
+}
+.modal-close{
+  cursor:pointer;color:var(--text-faint);
+  font-size:20px;width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-pill);
+  transition:all var(--transition-fast);
+}
+.modal-close:hover{
+  background:var(--panel-2);color:var(--text);
+}
+.modal-body{padding:24px 28px;}
+.modal-foot{
+  padding:18px 28px;
+  border-top:1px solid var(--border-subtle);
+  display:flex;justify-content:flex-end;gap:12px;
+  position:sticky;bottom:0;background:var(--panel);
+  z-index:2;border-radius:0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Form elements */
+.form-row{margin-bottom:16px;}
+.form-row label{
+  display:block;font-size:11px;color:var(--text-faint);
+  text-transform:uppercase;letter-spacing:0.08em;
+  margin-bottom:8px;font-family:var(--font-mono);font-weight:500;
+}
+.form-row input, .form-row select, .form-row textarea{
+  width:100%;
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:11px 16px;
+  border-radius:var(--radius-sm);
+  font-size:14px;
+  font-family:var(--font-display);
+  transition:all var(--transition-fast);
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-ghost);
+  background:var(--panel);
+}
+.form-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+}
+
+/* Line item rows */
+.bom-row, .mini-form, .tier-row{
+  display:grid;
+  gap:12px;
+  align-items:end;
+  margin-bottom:12px;
+}
+.bom-row{
+  grid-template-columns:1fr 120px 110px auto;
+}
+.mini-form{
+  grid-template-columns:1fr 1fr 1fr auto;
+}
+.tier-row{
+  grid-template-columns:1fr 1fr auto;
+}
+.bom-row input,.bom-row select,
+.mini-form input,.mini-form select,
+.tier-row input,.tier-row select,
+.subtable input,.subtable select{
+  font-family:var(--font-mono);
+  font-size:13px;
+  padding:10px 14px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:var(--panel-2);
+  color:var(--text);
+  transition:all var(--transition-fast);
+  height:42px;
+}
+.bom-row input:focus,.bom-row select:focus,
+.mini-form input:focus,.mini-form select:focus,
+.tier-row input:focus,.tier-row select:focus,
+.subtable input:focus,.subtable select:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-ghost);
+  background:var(--panel);
+}
+.bom-row input[type="number"],
+.mini-form input[type="number"],
+.tier-row input[type="number"],
+.subtable input[type="number"]{
+  text-align:right;letter-spacing:0.02em;
+}
+.bom-row input:disabled,
+.mini-form input:disabled,
+.tier-row input:disabled,
+.subtable input:disabled{
+  background:var(--panel-3);color:var(--text-faint);cursor:not-allowed;
+}
+.bom-row select,.mini-form select,.tier-row select,.subtable select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a9486' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  padding-right:34px;
+}
+
+/* Subtable */
+.subtable{
+  background:var(--panel-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius);
+  margin-bottom:14px;overflow:hidden;
+}
+.subtable table{font-size:12.5px;}
+.subtable thead th{background:transparent;padding:10px 12px;}
+.subtable tbody td{padding:10px 12px;}
+
+/* Balance box */
+.balance-box{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--panel-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius);
+  padding:16px 20px;
+  margin-bottom:18px;font-weight:500;
+}
+.balance-box .amt{
+  font-family:var(--font-mono);font-weight:700;
+  font-size:20px;letter-spacing:-0.01em;
+}
+
+/* Section title */
+.section-title{
+  font-size:11px;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text-faint);
+  font-family:var(--font-mono);
+  margin:24px 0 12px 0;
+  display:flex;justify-content:space-between;align-items:center;
+  font-weight:500;
+}
+
+/* Chart wrap */
+.chart-wrap{position:relative;height:260px;}
+
+/* Access denied */
+.access-denied{
+  padding:100px 24px;text-align:center;color:var(--text-faint);
+}
+.access-denied h2{
+  color:var(--text);font-size:22px;margin-bottom:12px;font-weight:700;
+}
+.access-denied::before{
+  content:'🔒';display:block;font-size:48px;
+  margin-bottom:20px;opacity:0.4;
+}
+
+/* Warn banner */
+.warn-banner{
+  background:var(--warn-soft);
+  border:1px solid rgba(201,168,76,0.15);
+  color:var(--warn);
+  padding:14px 18px;
+  border-radius:var(--radius-sm);
+  font-size:13.5px;margin-bottom:16px;font-weight:500;
+}
+
+/* Accordion */
+.accordion{
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:12px;
+  background:var(--panel);
+}
+.accordion-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 20px;
+  cursor:pointer;
+  background:var(--panel);
+  transition:background var(--transition-fast);
+  border:none;width:100%;font-family:var(--font-display);
+  font-size:14px;font-weight:600;color:var(--text);
+}
+.accordion-header:hover{background:var(--panel-2);}
+.accordion-header .icon{
+  transition:transform var(--transition-fast);
+  color:var(--text-faint);font-size:18px;
+}
+.accordion.open .accordion-header .icon{
+  transform:rotate(45deg);
+}
+.accordion-body{
+  max-height:0;overflow:hidden;
+  transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1), padding 0.4s ease;
+  padding:0 20px;
+}
+.accordion.open .accordion-body{
+  max-height:800px;
+  padding:0 20px 20px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{
+  background:#d0d5cc;border-radius:8px;
+  border:2px solid transparent;background-clip:padding-box;
+}
+::-webkit-scrollbar-thumb:hover{background:#b8c0b4;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* Animations */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(12px);}
+  to{opacity:1;transform:translateY(0);}
+}
+#content > *{animation:fadeInUp 0.4s ease-out;}
+
+/* Responsive */
+@media (max-width:1024px){
+  .two-col{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
+}
+@media (max-width:768px){
+  #topnav{padding:0 20px;height:64px;}
+  .nav-links{display:none;}
+  .page-header{padding:24px 20px 16px;}
+  .page-header h1{font-size:24px;}
+  #content{padding:0 20px 20px;}
+  .modal{width:100%;max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:85vh;position:fixed;bottom:0;}
+  .bom-row{grid-template-columns:1fr 90px 80px auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- Decorative background blobs -->
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="bg-blob blob-3"></div>
+
+<!-- Top Navigation -->
+<nav id="topnav">
+  <div class="nav-brand">
+    <div class="nav-brand-mark"><img src="data:image/png;base64,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" alt="Malan Makanan"></div>
+    <div>
+      <div class="nav-brand-text">Malan Makanan</div>
+      <div class="nav-brand-sub">Dessert Mfg & Distribution</div>
+    </div>
+  </div>
+  <div class="nav-links" id="navLinks"></div>
+  <div class="nav-right">
+    <select class="role-pill" id="roleSelect" onchange="setRole(this.value)">
+      <option value="owner">Business Owner</option>
+      <option value="production">Production Staff</option>
+      <option value="inventory">Inventory Manager</option>
+      <option value="distribution">Sales Staff</option>
+      <option value="finance">Finance Staff</option>
+    </select>
+  </div>
+</nav>
+
+<div id="main">
+  <div class="page-header">
+    <h1 id="pageTitle">Dashboard</h1>
+    <div class="meta" id="topMeta"></div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBox"></div></div>
+
+<script>
+
+/* ============================================================
+   MALAN MAKANAN ERP — FRONTEND
+   In-memory + localStorage data layer. Every read/write funnels
+   through DATA.api so swapping to a real backend (Google Sheets via
+   Apps Script) later only requires rewriting the bodies of DATA.api
+   methods — no view code changes.
+   ============================================================ */
+
+const fmt = n => 'Rs. ' + Number(n||0).toLocaleString('en-LK', {maximumFractionDigits:0});
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '—';
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = (p) => p + '-' + Math.random().toString(36).slice(2,8);
+
+/* ---------------- DATA STORE ---------------- */
+const STORAGE_KEY = 'malan_makanan_erp_data_v2';
+let DB = {
+  items: [],            // unified catalog: simple | finished | non_inventory
+  shops: [],             // customers
+  suppliers: [],         // suppliers for purchases
+  purchases: [],         // {..., payments:[], returns:[]}
+  sales: [],              // {..., payments:[], returns:[]}
+  production_batches: [],
+  units: ['pcs','kg','g','ml','l','cylinders','pack'], // editable unit-of-measure list, extendable via the '+' button
+};
+
+function loadFromStorage(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw){ DB = JSON.parse(raw); if(!Array.isArray(DB.suppliers)) DB.suppliers = []; if(!Array.isArray(DB.units)) DB.units = ['pcs','kg','g','ml','l','cylinders','pack']; } }
+  catch(e){ console.warn('Could not load saved data', e); }
+}
+function saveToStorage(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+  catch(e){ console.warn('Could not save data', e); }
+}
+loadFromStorage();
+
+/* ---------------- HASH ROUTING ---------------- */
+let hashRouteHandled = false;
+function handleHashRoute(){
+  if(hashRouteHandled) return;
+  hashRouteHandled = true;
+  const hash = window.location.hash.slice(1);
+  if(!hash) return;
+  const slashIdx = hash.indexOf('/');
+  if(slashIdx === -1) return;
+  const type = hash.slice(0, slashIdx);
+  const id = hash.slice(slashIdx + 1);
+  if(!type || !id) return;
+  setTimeout(() => {
+    switch(type){
+      case 'item':
+        const item = DB.items.find(i => i.id === id);
+        if(item) openItemModal(id);
+        break;
+      case 'shop':
+        const shop = DB.shops.find(s => s.id === id);
+        if(shop) openShopModal(id);
+        break;
+      case 'supplier':
+        const sup = DB.suppliers.find(s => s.id === id);
+        if(sup) openSupplierModal(id);
+        break;
+      case 'purchase':
+        const pu = DB.purchases.find(p => p.id === id);
+        if(pu) openPurchaseDetail(id);
+        break;
+      case 'sale':
+        const sa = DB.sales.find(s => s.id === id);
+        if(sa) openSaleDetail(id);
+        break;
+    }
+  }, 400);
+}
+
+/* ---------------- STOCK CALCULATION ---------------- */
+// getLines() makes every purchase/sale a uniform multi-line document. Older
+// single-item records (created before multi-line support) are read as a
+// one-line document on the fly, so nothing already saved breaks.
+function getLines(doc){
+  if(doc.lines) return doc.lines;
+  return [{item_id: doc.item_id, qty: doc.qty, unit_cost: doc.unit_cost, unit_price: doc.unit_price, entry_qty: doc.entry_qty, entry_unit: doc.entry_unit}];
+}
+function purchaseTotal(p){ return getLines(p).reduce((s,l)=>s+Number(l.qty)*Number(l.unit_cost),0); }
+function saleTotal(s){ return getLines(s).reduce((s2,l)=>s2+Number(l.qty)*Number(l.unit_price),0); }
+function returnItemId(ret, doc){ return ret.item_id || doc.item_id; } // legacy single-item returns had no item_id
+
+function stockOf(itemId){
+  let stock = 0;
+  DB.purchases.forEach(p=>{
+    getLines(p).forEach(line=>{ if(line.item_id===itemId) stock += Number(line.qty); });
+    (p.returns||[]).forEach(r=>{ if(returnItemId(r,p)===itemId) stock -= Number(r.qty); });
+  });
+  DB.production_batches.forEach(b=>{
+    if(b.item_id===itemId) stock += Number(b.qty_produced);
+    (b.consumed||[]).forEach(c=>{ if(c.item_id===itemId) stock -= Number(c.qty); });
+  });
+  DB.sales.forEach(s=>{
+    getLines(s).forEach(line=>{ if(line.item_id===itemId) stock -= Number(line.qty); });
+    (s.returns||[]).forEach(r=>{ if(returnItemId(r,s)===itemId && r.restock) stock += Number(r.qty); });
+  });
+  return stock;
+}
+function purchaseBalance(p){
+  const paid = (p.payments||[]).reduce((s,x)=>s+Number(x.amount),0);
+  const retImpact = (p.returns||[]).reduce((s,x)=>s+Number(x.cost_impact||0),0);
+  return purchaseTotal(p) - paid - retImpact;
+}
+function saleBalance(s){
+  const paid = (s.payments||[]).reduce((sum,x)=>sum+Number(x.amount),0);
+  const retImpact = (s.returns||[]).reduce((sum,x)=>sum+Number(x.cost_impact||0),0);
+  return saleTotal(s) - paid - retImpact;
+}
+function shopBalance(shopId){
+  return DB.sales.filter(s=>s.shop_id===shopId).reduce((sum,s)=>sum+saleBalance(s),0);
+}
+function supplierBalance(supplierId){
+  return DB.purchases.filter(p=>p.supplier_id===supplierId).reduce((sum,p)=>sum+purchaseBalance(p),0);
+}
+
+/* ---------------- DATA API (swap point for real backend) ---------------- */
+const DATA = {
+  api: {
+    getItems: () => DB.items,
+    getShops: () => DB.shops,
+    getPurchases: () => DB.purchases,
+    getSales: () => DB.sales,
+    getBatches: () => DB.production_batches,
+
+    createItem: (it) => { it.id = uid('IT'); DB.items.push(it); return it; },
+    updateItem: (id, fields) => { Object.assign(DB.items.find(i=>i.id===id), fields); },
+    deleteItem: (id) => { DB.items = DB.items.filter(i=>i.id!==id); },
+
+    createShop: (s) => { s.id = uid('S'); DB.shops.push(s); return s; },
+    updateShop: (id, fields) => { Object.assign(DB.shops.find(s=>s.id===id), fields); },
+    deleteShop: (id) => { DB.shops = DB.shops.filter(s=>s.id!==id); },
+
+    getSuppliers: () => DB.suppliers,
+    createSupplier: (s) => { s.id = uid('SUP'); DB.suppliers.push(s); return s; },
+    updateSupplier: (id, fields) => { Object.assign(DB.suppliers.find(s=>s.id===id), fields); },
+    deleteSupplier: (id) => { DB.suppliers = DB.suppliers.filter(s=>s.id!==id); },
+
+    createPurchase: (p) => {
+      p.id = uid('PU'); p.payments = []; p.returns = [];
+      DB.purchases.push(p); return p;
+    },
+    updatePurchase: (id, fields) => {
+      const p = DB.purchases.find(x=>x.id===id);
+      Object.assign(p, fields);
+    },
+    deletePurchase: (id) => { DB.purchases = DB.purchases.filter(p=>p.id!==id); },
+    addPurchasePayment: (id, payment) => { payment.id = uid('PAY'); DB.purchases.find(p=>p.id===id).payments.push(payment); },
+    addPurchaseReturn: (id, ret) => { ret.id = uid('RET'); DB.purchases.find(p=>p.id===id).returns.push(ret); },
+
+    createSale: (s) => {
+      s.id = uid('SA'); s.payments = []; s.returns = [];
+      DB.sales.push(s); return s;
+    },
+    updateSale: (id, fields) => {
+      const s = DB.sales.find(x=>x.id===id);
+      Object.assign(s, fields);
+    },
+    deleteSale: (id) => { DB.sales = DB.sales.filter(s=>s.id!==id); },
+    addSalePayment: (id, payment) => { payment.id = uid('PAY'); DB.sales.find(s=>s.id===id).payments.push(payment); },
+    addSaleReturn: (id, ret) => { ret.id = uid('RET'); DB.sales.find(s=>s.id===id).returns.push(ret); },
+
+    createProductionBatch: (batch) => {
+      const item = DB.items.find(i=>i.id===batch.item_id);
+      const batchSize = Number(item.batch_size)||100;
+      const multiplier = Number(batch.qty_produced)/batchSize;
+      const bom = item.bom||[];
+      let shortfalls = [];
+      bom.forEach(line=>{
+        const need = Number(line.qty_per_batch)*multiplier;
+        const have = stockOf(line.ingredient_item_id);
+        if(have < need) shortfalls.push({ingredient_item_id:line.ingredient_item_id, need, have});
+      });
+      if(shortfalls.length && !batch.override) return {ok:false, shortfalls};
+      batch.id = uid('B');
+      batch.stock_override = shortfalls.length>0;
+      batch.expiry_date = item.shelf_life_days ? addDays(batch.date, Number(item.shelf_life_days)) : null;
+      let ingredientCost = 0;
+      batch.consumed = bom.map(line=>{
+        const qty = Number(line.qty_per_batch)*multiplier;
+        const ing = DB.items.find(i=>i.id===line.ingredient_item_id);
+        ingredientCost += qty*Number(ing.avg_cost||0);
+        return {item_id: line.ingredient_item_id, qty, unit_cost: ing.avg_cost||0};
+      });
+      batch.ingredient_cost = ingredientCost;
+      batch.total_cost = ingredientCost + Number(batch.packaging_cost||0) + Number(batch.gas_cost||0) + Number(batch.labor_cost||0);
+      batch.unit_cost = batch.total_cost / Number(batch.qty_produced);
+      DB.production_batches.push(batch);
+      return {ok:true, batch};
+    },
+    deleteBatch: (id) => { DB.production_batches = DB.production_batches.filter(b=>b.id!==id); },
+  }
+};
+function addDays(dateStr, n){ const d = new Date(dateStr); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+/* ---------------- ROLES & NAV ---------------- */
+const ROLES = {
+  owner:        {label:'Business Owner', modules:['dashboard','items','shops','suppliers','purchases','production','sales','availability','reports','settings']},
+  production:   {label:'Production Staff', modules:['dashboard','production','items']},
+  inventory:    {label:'Inventory Manager', modules:['dashboard','items','suppliers','purchases','availability']},
+  distribution: {label:'Sales Staff', modules:['dashboard','sales','shops','availability']},
+  finance:      {label:'Finance Staff', modules:['dashboard','suppliers','purchases','sales','reports']},
+};
+let currentRole = 'owner';
+
+const NAV = [
+  {section:'Overview', items:[ {id:'dashboard', label:'Dashboard', icon:'◆'} ]},
+  {section:'Catalog', items:[
+    {id:'items', label:'Items', icon:'▢'},
+    {id:'shops', label:'Customers', icon:'⌂'},
+    {id:'suppliers', label:'Suppliers', icon:'⛟'},
+  ]},
+  {section:'Operations', items:[
+    {id:'purchases', label:'Purchases', icon:'▥'},
+    {id:'production', label:'Production', icon:'▣'},
+    {id:'sales', label:'Sales', icon:'▶'},
+  ]},
+  {section:'Insights', items:[
+    {id:'availability', label:'Availability', icon:'◫'},
+    {id:'reports', label:'Reports', icon:'▤'},
+    {id:'settings', label:'Settings', icon:'⚙'},
+  ]},
+];
+let currentView = 'dashboard';
+
+function setRole(role){
+  currentRole = role;
+  if(!ROLES[currentRole].modules.includes(currentView)) currentView = 'dashboard';
+  renderNav(); renderView();
+}
+function renderNav(){
+  const allowed = ROLES[currentRole].modules;
+  document.getElementById('navLinks').innerHTML = NAV.flatMap(sec=>{
+    const items = sec.items.filter(it=>allowed.includes(it.id));
+    return items.map(it=>`<button class="nav-link ${it.id===currentView?'active':''}" onclick="goTo('${it.id}')">${it.label}</button>`);
+  }).join('');
+}
+function goTo(view){ currentView = view; renderNav(); renderView(); }
+
+function renderView(){
+  saveToStorage();
+  const hash = window.location.hash.slice(1);
+  if(hash === 'sale-new' || hash.startsWith('sale-edit/')){
+    document.getElementById('pageTitle').textContent = hash === 'sale-new' ? 'New Sale' : 'Edit Sale';
+    document.getElementById('topMeta').textContent = 'Sales  ·  ' + ROLES[currentRole].label + '  ·  ' + fmtDate(new Date());
+    renderSalePage();
+    return;
+  }
+  const titles = {dashboard:'Dashboard', items:'Items', shops:'Customers', suppliers:'Suppliers', purchases:'Purchases', production:'Production', sales:'Sales', availability:'Availability', reports:'Reports', settings:'Settings'};
+  const subtitles = {dashboard:'Overview of your dessert manufacturing operations', items:'Manage ingredients, finished goods and non-inventory items', shops:'Customer accounts and outstanding balances', suppliers:'Supplier directory and payables', purchases:'Raw material procurement log', production:'Production batches and costing', sales:'Sales orders and consignment tracking', availability:'Real-time stock levels', reports:'Analytics and financial insights', settings:'Backup, sync and configuration'};
+  document.getElementById('pageTitle').textContent = titles[currentView] || '';
+  document.getElementById('topMeta').textContent = (subtitles[currentView] || '') + '  ·  ' + ROLES[currentRole].label + '  ·  ' + fmtDate(new Date());
+  const content = document.getElementById('content');
+  if(!ROLES[currentRole].modules.includes(currentView)){
+    content.innerHTML = `<div class="access-denied"><h2>No access</h2><p>${ROLES[currentRole].label} does not have permission to view this module.</p></div>`;
+    return;
+  }
+  const renderers = {dashboard:renderDashboard, items:renderItems, shops:renderShops, suppliers:renderSuppliers, purchases:renderPurchases, production:renderProduction, sales:renderSales, availability:renderAvailability, reports:renderReports, settings:renderSettings};
+  content.innerHTML = '';
+  renderers[currentView]();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const items = DATA.api.getItems();
+  const sales = DATA.api.getSales();
+  const purchases = DATA.api.getPurchases();
+  const batches = DATA.api.getBatches();
+  const shops = DATA.api.getShops();
+
+  const revenue = sales.reduce((s,x)=>s+saleTotal(x),0);
+  const expense = purchases.reduce((s,x)=>s+purchaseTotal(x),0);
+  const profit = revenue - expense;
+  const cashIn = sales.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashOut = purchases.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashPosition = cashIn - cashOut;
+  const receivables = sales.reduce((s,x)=>s+Math.max(saleBalance(x),0),0);
+  const payables = purchases.reduce((s,x)=>s+Math.max(purchaseBalance(x),0),0);
+  const stockItems = items.filter(i=>i.type!=='non_inventory');
+  const invValue = stockItems.reduce((s,i)=>s+stockOf(i.id)*Number(i.avg_cost||0),0);
+  const lowStock = stockItems.filter(i=>i.min_stock && stockOf(i.id) < Number(i.min_stock)).length;
+  const expiringSoon = batches.filter(b=> b.expiry_date && (new Date(b.expiry_date)-new Date())/86400000 <= 7).length;
+  const prodVolume = batches.reduce((s,b)=>s+Number(b.qty_produced),0);
+  const returnsCount = sales.reduce((s,x)=>s+(x.returns||[]).length,0) + purchases.reduce((s,x)=>s+(x.returns||[]).length,0);
+
+  const kpis = [
+    {label:'Revenue', value:fmt(revenue)},
+    {label:'Expense', value:fmt(expense)},
+    {label:'Profit', value:fmt(profit), cls: profit>=0?'positive':'danger'},
+    {label:'Cash Position', value:fmt(cashPosition)},
+    {label:'Receivables (from shops)', value:fmt(receivables), cls: receivables>0?'alert':''},
+    {label:'Payables (to suppliers)', value:fmt(payables), cls: payables>0?'alert':''},
+    {label:'Inventory Value', value:fmt(invValue)},
+    {label:'Low Stock Items', value:lowStock, cls: lowStock>0?'danger':''},
+    {label:'Expiring ≤ 7 Days', value:expiringSoon, cls: expiringSoon>0?'alert':''},
+    {label:'Production Volume', value:prodVolume+' units'},
+    {label:'Returns Logged', value:returnsCount},
+  ];
+
+  let html = `<div class="kpi-grid">` + kpis.map(k=>`<div class="kpi-card ${k.cls||''}"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div></div>`).join('') + `</div>`;
+  html += `<div class="two-col">
+    <div class="panel"><div class="panel-head"><h2>Revenue by Shop</h2></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartShopRevenue"></canvas></div></div></div>
+    <div class="panel"><div class="panel-head"><h2>Expiry Watch</h2><div class="sub">Active batches</div></div><div class="panel-body" id="expiryWatch"></div></div>
+  </div>
+  <div class="panel"><div class="panel-head"><h2>Low Stock Alerts</h2></div><div class="panel-body" id="lowStockList"></div></div>`;
+  document.getElementById('content').innerHTML = html;
+
+  const sortedBatches = [...batches].filter(b=>b.expiry_date).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date));
+  document.getElementById('expiryWatch').innerHTML = sortedBatches.length ? sortedBatches.map(b=>{
+    const days = Math.ceil((new Date(b.expiry_date)-new Date())/86400000);
+    const item = items.find(i=>i.id===b.item_id);
+    const risk = days<=3?'bad':days<=7?'warn':'good';
+    return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;"><span>${item?item.name:'—'} <span class="muted">· ${b.batch_number}</span></span><span class="pill ${risk}">${days} day${days===1?'':'s'}</span></div>`;
+  }).join('') : `<div class="empty-state">No active batches with expiry tracking.</div>`;
+
+  const low = stockItems.filter(i=>i.min_stock && stockOf(i.id) < Number(i.min_stock));
+  document.getElementById('lowStockList').innerHTML = low.length ? `<table><thead><tr><th>Item</th><th class="num">Current</th><th class="num">Minimum</th><th>Status</th></tr></thead><tbody>${low.map(i=>`<tr><td>${i.name}</td><td class="num">${stockOf(i.id)} ${i.unit}</td><td class="num">${i.min_stock} ${i.unit}</td><td><span class="pill bad">Reorder</span></td></tr>`).join('')}</tbody></table>` : `<div class="empty-state">All items above minimum stock.</div>`;
+
+  const revByShop = {};
+  sales.forEach(s=>{ revByShop[s.shop_id] = (revByShop[s.shop_id]||0) + saleTotal(s); });
+  const labels = Object.keys(revByShop).map(id=>{ const sh = shops.find(s=>s.id===id); return sh?sh.name:'—'; });
+  new Chart(document.getElementById('chartShopRevenue'), {
+    type:'bar', data:{labels, datasets:[{label:'Revenue', data:Object.values(revByShop), backgroundColor:'#c97a2e', borderRadius:3}]},
+    options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170',font:{size:10}},grid:{display:false}}, y:{ticks:{color:'#5b6170',font:{size:10}},grid:{color:'#eceef2'}}}}
+  });
+}
+
+/* ---------------- ITEMS (unified catalog) ---------------- */
+function renderItems(){
+  const items = DATA.api.getItems();
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <input type="text" placeholder="Search items..." oninput="filterTable(this.value,'itemsTable')">
+      <select onchange="filterItemsByType(this.value)"><option value="">All Types</option><option value="simple">Simple</option><option value="finished">Finished Good</option><option value="non_inventory">Non-Inventory</option></select>
+      <div class="spacer"></div>
+      <button class="btn" onclick="openItemModal()">+ Add Item</button>
+    </div>
+    <div class="panel">
+      <table id="itemsTable">
+        <thead><tr><th>Name</th><th>Type</th><th>SKU</th><th>Unit</th><th class="num">Stock</th><th class="num">Avg Cost</th><th>Status</th><th></th></tr></thead>
+        <tbody>${items.map(rowItem).join('') || ''}</tbody>
+      </table>
+      ${!items.length ? '<div class="empty-state">No items yet. Add ingredients, finished goods, or expense items.</div>' : ''}
+    </div>`;
+}
+function rowItem(it){
+  const typeLabels = {simple:'Simple', finished:'Finished Good', non_inventory:'Non-Inventory'};
+  const typePill = {simple:'neutral', finished:'good', non_inventory:'warn'};
+  const stock = it.type!=='non_inventory' ? stockOf(it.id) : null;
+  const low = it.min_stock && stock!==null && stock < Number(it.min_stock);
+  return `<tr data-type="${it.type}">
+    <td><strong>${it.name}</strong></td>
+    <td><span class="pill ${typePill[it.type]}">${typeLabels[it.type]}</span></td>
+    <td class="muted">${it.sku||'—'}</td>
+    <td>${it.unit||'—'}</td>
+    <td class="num" style="font-family:var(--font-mono);">${stock!==null ? stock.toFixed(4).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1')+(low?' ⚠':'') : '—'}</td>
+    <td class="num">${fmt(it.avg_cost||0)}</td>
+    <td><span class="pill ${it.status==='active'?'good':'neutral'}">${it.status}</span></td>
+    <td><div class="row-actions"><button class="btn small secondary" onclick="openItemModal('${it.id}')">Edit</button><button class="btn small danger" onclick="deleteItemConfirm('${it.id}')">Delete</button></div></td>
+  </tr>`;
+}
+function filterItemsByType(type){
+  document.querySelectorAll('#itemsTable tbody tr').forEach(tr=>{ tr.style.display = (!type || tr.dataset.type===type) ? '' : 'none'; });
+}
+function deleteItemConfirm(id){
+  if(confirm('Delete this item? This cannot be undone.')){ DATA.api.deleteItem(id); renderView(); }
+}
+
+let modalState = { bom: [], tiers: [], altUom: null };
+
+function openItemModal(editId){
+  const editing = editId ? DB.items.find(i=>i.id===editId) : null;
+  modalState.bom = editing ? JSON.parse(JSON.stringify(editing.bom||[])) : [];
+  modalState.tiers = editing ? JSON.parse(JSON.stringify(editing.price_tiers||[])) : [];
+  modalState.altUom = editing && editing.alt_uom ? JSON.parse(JSON.stringify(editing.alt_uom)) : null;
+  const simpleItems = DB.items.filter(i=>i.type==='simple' || i.type==='finished');
+
+  const body = `
+    <div class="form-row"><label>Item Name</label><input id="f_name" value="${editing?editing.name:''}" placeholder="e.g. Wattalapam or Sugar"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Item Type</label>
+        <select id="f_type" onchange="toggleItemTypeSections()">
+          <option value="simple" ${editing&&editing.type==='simple'?'selected':''}>Simple (ingredient/material)</option>
+          <option value="finished" ${editing&&editing.type==='finished'?'selected':''}>Finished Good (BOM)</option>
+          <option value="non_inventory" ${editing&&editing.type==='non_inventory'?'selected':''}>Non-Inventory (expense item)</option>
+        </select>
+      </div>
+      <div class="form-row"><label>SKU</label><input id="f_sku" value="${editing?editing.sku||'':''}"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Unit Type</label>
+        <div style="display:flex;gap:6px;">
+          <select id="f_unit" style="flex:1;"></select>
+          <button type="button" class="btn secondary small" onclick="promptAddUnit()" title="Add a new unit" style="flex-shrink:0;">+</button>
+        </div>
+      </div>
+      <div class="form-row"><label>Category</label><input id="f_category" value="${editing?editing.category||'':''}"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Minimum Stock</label><input id="f_min" type="number" value="${editing?editing.min_stock||'':''}"></div>
+      <div class="form-row"><label>Average Cost (Rs.)</label><input id="f_cost" type="number" value="${editing?editing.avg_cost||'':''}"></div>
+    </div>
+    <div id="finishedOnlyFields" style="display:none;">
+      <div class="form-grid">
+        <div class="form-row"><label>Standard Batch Size</label><input id="f_batchsize" type="number" value="${editing?editing.batch_size||100:100}"></div>
+        <div class="form-row"><label>Shelf Life (days)</label><input id="f_shelf" type="number" value="${editing?editing.shelf_life_days||'':''}"></div>
+      </div>
+      <div class="section-title">Bill of Materials (per batch)<button class="btn small secondary" onclick="addBomRow()">+ Add Ingredient</button></div>
+      <div id="bomRows"></div>
+    </div>
+    <div id="priceTierSection" style="display:none;">
+      <div class="section-title">Price Tiers<button class="btn small secondary" onclick="addTierRow()">+ Add Tier</button></div>
+      <div id="tierRows"></div>
+    </div>
+    <div id="altUomSection" style="display:none;">
+      <div class="section-title">Alternate Unit of Measure (optional)</div>
+      <p class="muted" style="font-size:11.5px;margin-bottom:8px;">e.g. Base unit = pcs, Alt unit = "Pack (15 pcs)" with conversion 15 — or Base = g, Alt = "kg" with conversion 1000.</p>
+      <div id="altUomRow"></div>
+    </div>
+    <div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div>
+  `;
+  showModal(editing?'Edit Item':'Add Item', body, () => saveItem(editId), editing?{openInTab:`item/${editId}`}:{});
+  if(editing && editing.unit && !DB.units.includes(editing.unit)) DB.units.push(editing.unit); // preserve any older free-typed unit
+  refreshUnitDropdown(editing ? editing.unit : DB.units[0]);
+  toggleItemTypeSections();
+  renderBomRows(simpleItems);
+  renderTierRows();
+  renderAltUomRow();
+}
+function refreshUnitDropdown(selectedValue){
+  const sel = document.getElementById('f_unit');
+  if(!sel) return;
+  sel.innerHTML = DB.units.map(u=>`<option value="${u}" ${u===selectedValue?'selected':''}>${u}</option>`).join('');
+}
+function promptAddUnit(){
+  const newUnit = prompt('New unit name (e.g. liters, dozen, box):');
+  if(!newUnit || !newUnit.trim()) return;
+  const trimmed = newUnit.trim();
+  if(!DB.units.includes(trimmed)){ DB.units.push(trimmed); saveToStorage(); }
+  refreshUnitDropdown(trimmed);
+}
+function renderAltUomRow(){
+  const a = modalState.altUom || {name:'', factor:''};
+  document.getElementById('altUomRow').innerHTML = `
+    <div class="tier-row">
+      <input placeholder="Alt unit name (e.g. Pack of 15)" value="${a.name}" onchange="updateAltUom('name', this.value)">
+      <input type="number" step="0.0001" placeholder="1 alt unit = __ base units" value="${a.factor}" onchange="updateAltUom('factor', this.value)">
+      <button class="btn small danger" onclick="clearAltUom()">✕</button>
+    </div>`;
+}
+function updateAltUom(field, value){
+  if(!modalState.altUom) modalState.altUom = {name:'', factor:''};
+  modalState.altUom[field] = value;
+}
+function clearAltUom(){ modalState.altUom = null; renderAltUomRow(); }
+function toggleItemTypeSections(){
+  const type = val('f_type');
+  document.getElementById('finishedOnlyFields').style.display = type==='finished' ? 'block' : 'none';
+  document.getElementById('priceTierSection').style.display = type!=='non_inventory' ? 'block' : 'none';
+  document.getElementById('altUomSection').style.display = type!=='non_inventory' ? 'block' : 'none';
+}
+function renderBomRows(simpleItems){
+  if(!simpleItems.length){
+    document.getElementById('bomRows').innerHTML = '<p class="muted" style="font-size:12px;">Add Simple ingredient items first, before building a BOM.</p>';
+    return;
+  }
+  document.getElementById('bomRows').innerHTML = modalState.bom.map((row,idx)=>{
+    const ing = simpleItems.find(si=>si.id===row.ingredient_item_id);
+    return `<div class="bom-row">
+      <select onchange="onBomRowItemChange(${idx}, this.value)">
+        ${simpleItems.map(si=>`<option value="${si.id}" ${row.ingredient_item_id===si.id?'selected':''}>${si.name}</option>`).join('')}
+      </select>
+      <input type="number" step="0.0001" placeholder="Qty" value="${row.qty_per_batch||''}" onchange="modalState.bom[${idx}].qty_per_batch=this.value">
+      <input value="${ing?ing.unit||'—':'—'}" disabled style="background:var(--panel-2);color:var(--text-faint);text-align:center;">
+      <button class="btn small danger" onclick="removeBomRow(${idx})">✕</button>
+    </div>`;
+  }).join('');
+}
+function onBomRowItemChange(idx, itemId){
+  modalState.bom[idx].ingredient_item_id = itemId;
+  const ing = DB.items.find(i=>i.id===itemId);
+  modalState.bom[idx].unit = ing ? ing.unit : '';
+  renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished'));
+}
+function addBomRow(){
+  const simpleItems = DB.items.filter(i=>i.type==='simple'||i.type==='finished');
+  if(!simpleItems.length){ alert('Add a Simple ingredient item first, under Items.'); return; }
+  // Default the new row to whatever the dropdown will visually show (its first option),
+  // so a row is never silently dropped just because the user didn't have to touch the dropdown.
+  modalState.bom.push({ingredient_item_id: simpleItems[0].id, qty_per_batch:'', unit: simpleItems[0].unit});
+  renderBomRows(simpleItems);
+}
+function removeBomRow(idx){ modalState.bom.splice(idx,1); renderBomRows(DB.items.filter(i=>i.type==='simple'||i.type==='finished')); }
+function renderTierRows(){
+  document.getElementById('tierRows').innerHTML = modalState.tiers.map((t,idx)=>`
+    <div class="tier-row">
+      <input placeholder="Tier label (e.g. Retail Shops)" value="${t.label||''}" onchange="modalState.tiers[${idx}].label=this.value">
+      <input type="number" placeholder="Price (Rs.)" value="${t.price||''}" onchange="modalState.tiers[${idx}].price=this.value">
+      <button class="btn small danger" onclick="removeTierRow(${idx})">✕</button>
+    </div>`).join('') || '<p class="muted" style="font-size:12px;">No price tiers yet.</p>';
+}
+function addTierRow(){ if(modalState.tiers.length>=3){ alert('Maximum 3 price tiers per item.'); return; } modalState.tiers.push({label:'',price:''}); renderTierRows(); }
+function removeTierRow(idx){ modalState.tiers.splice(idx,1); renderTierRows(); }
+
+function saveItem(editId){
+  const fields = {
+    name: val('f_name'), type: val('f_type'), sku: val('f_sku'), unit: val('f_unit'),
+    category: val('f_category'), min_stock: Number(val('f_min'))||0, avg_cost: Number(val('f_cost'))||0,
+    status: val('f_status'),
+    batch_size: val('f_type')==='finished' ? Number(val('f_batchsize'))||100 : undefined,
+    shelf_life_days: val('f_type')==='finished' ? Number(val('f_shelf'))||0 : undefined,
+    bom: val('f_type')==='finished' ? modalState.bom.filter(r=>r.ingredient_item_id) : [],
+    price_tiers: val('f_type')!=='non_inventory' ? modalState.tiers.filter(t=>t.label) : [],
+    alt_uom: (val('f_type')!=='non_inventory' && modalState.altUom && modalState.altUom.name && modalState.altUom.factor) ? {name: modalState.altUom.name, factor: Number(modalState.altUom.factor)} : null,
+  };
+  if(editId) DATA.api.updateItem(editId, fields);
+  else DATA.api.createItem(fields);
+  closeModal(); renderView();
+}
+
+/* ---------------- SHOPS ---------------- */
+function renderShops(){
+  const shops = DATA.api.getShops();
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search customers..." oninput="filterTable(this.value,'shopTable')"><div class="spacer"></div><button class="btn" onclick="openShopModal()">+ Add Customer</button></div>
+    <div class="panel">
+      <table id="shopTable">
+        <thead><tr><th>Customer</th><th>Owner</th><th>Phone</th><th>District</th><th class="num">Outstanding</th><th>Status</th><th></th></tr></thead>
+        <tbody>${shops.map(s=>{
+          const bal = shopBalance(s.id);
+          return `<tr>
+            <td><strong>${s.name}</strong><div class="muted" style="font-size:11px;">${s.address||''}</div></td>
+            <td>${s.owner||'—'}</td><td>${s.phone||'—'}</td><td>${s.district||'—'}</td>
+            <td class="num">${fmt(bal)}</td>
+            <td><span class="pill ${s.status==='active'?'good':'neutral'}">${s.status}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openShopModal('${s.id}')">Edit</button><button class="btn small danger" onclick="deleteShopConfirm('${s.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!shops.length ? '<div class="empty-state">No customers yet.</div>' : ''}
+    </div>`;
+}
+function deleteShopConfirm(id){ if(confirm('Delete this customer?')){ DATA.api.deleteShop(id); renderView(); } }
+function openShopModal(editId){
+  const editing = editId ? DB.shops.find(s=>s.id===editId) : null;
+  showModal(editing?'Edit Customer':'Add Customer', `
+    <div class="form-row"><label>Customer / Shop Name</label><input id="f_name" value="${editing?editing.name:''}"></div>
+    <div class="form-grid"><div class="form-row"><label>Owner</label><input id="f_owner" value="${editing?editing.owner||'':''}"></div><div class="form-row"><label>Phone</label><input id="f_phone" value="${editing?editing.phone||'':''}"></div></div>
+    <div class="form-grid"><div class="form-row"><label>District</label><input id="f_district" value="${editing?editing.district||'':''}"></div><div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div></div>
+    <div class="form-row"><label>Address</label><input id="f_address" value="${editing?editing.address||'':''}"></div>
+  `, () => {
+    const fields = {name:val('f_name'), owner:val('f_owner'), phone:val('f_phone'), district:val('f_district'), address:val('f_address'), status:val('f_status')};
+    if(editId) DATA.api.updateShop(editId, fields); else DATA.api.createShop(fields);
+    closeModal(); renderView();
+  }, editing?{openInTab:`shop/${editId}`}:{});
+}
+
+/* ---------------- SUPPLIERS ---------------- */
+function renderSuppliers(){
+  const suppliers = DATA.api.getSuppliers();
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search suppliers..." oninput="filterTable(this.value,'supplierTable')"><div class="spacer"></div><button class="btn" onclick="openSupplierModal()">+ Add Supplier</button></div>
+    <div class="panel">
+      <table id="supplierTable">
+        <thead><tr><th>Supplier</th><th>Contact</th><th>Phone</th><th class="num">Owed to Supplier</th><th>Status</th><th></th></tr></thead>
+        <tbody>${suppliers.map(s=>{
+          const bal = supplierBalance(s.id);
+          return `<tr>
+            <td><strong>${s.name}</strong><div class="muted" style="font-size:11px;">${s.address||''}</div></td>
+            <td>${s.contact||'—'}</td><td>${s.phone||'—'}</td>
+            <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
+            <td><span class="pill ${s.status==='active'?'good':'neutral'}">${s.status}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openSupplierModal('${s.id}')">Edit</button><button class="btn small danger" onclick="deleteSupplierConfirm('${s.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!suppliers.length ? '<div class="empty-state">No suppliers yet. Add one to start logging Purchases against them.</div>' : ''}
+    </div>`;
+}
+function deleteSupplierConfirm(id){ if(confirm('Delete this supplier?')){ DATA.api.deleteSupplier(id); renderView(); } }
+function openSupplierModal(editId){
+  const editing = editId ? DB.suppliers.find(s=>s.id===editId) : null;
+  showModal(editing?'Edit Supplier':'Add Supplier', `
+    <div class="form-row"><label>Supplier Name</label><input id="f_name" value="${editing?editing.name:''}"></div>
+    <div class="form-grid"><div class="form-row"><label>Contact Person</label><input id="f_contact" value="${editing?editing.contact||'':''}"></div><div class="form-row"><label>Phone</label><input id="f_phone" value="${editing?editing.phone||'':''}"></div></div>
+    <div class="form-row"><label>Address</label><input id="f_address" value="${editing?editing.address||'':''}"></div>
+    <div class="form-row"><label>Status</label><select id="f_status"><option value="active" ${editing&&editing.status==='active'?'selected':''}>Active</option><option value="inactive" ${editing&&editing.status==='inactive'?'selected':''}>Inactive</option></select></div>
+  `, () => {
+    const fields = {name:val('f_name'), contact:val('f_contact'), phone:val('f_phone'), address:val('f_address'), status:val('f_status')};
+    if(editId) DATA.api.updateSupplier(editId, fields); else DATA.api.createSupplier(fields);
+    closeModal(); renderView();
+  }, editing?{openInTab:`supplier/${editId}`}:{});
+}
+
+/* ---------------- PURCHASES ---------------- */
+function renderPurchases(){
+  const purchases = [...DATA.api.getPurchases()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search purchases..." oninput="filterTable(this.value,'purchaseTable')"><div class="spacer"></div><button class="btn" onclick="openPurchaseModal()">+ New Purchase</button></div>
+    <div class="panel">
+      <table id="purchaseTable">
+        <thead><tr><th>Date</th><th>Supplier</th><th>Items</th><th class="num">Total</th><th class="num">Balance Due</th><th></th></tr></thead>
+        <tbody>${purchases.map(p=>{
+          const lines = getLines(p);
+          const itemNames = lines.map(l=>{ const it = DB.items.find(i=>i.id===l.item_id); return it?it.name:'—'; });
+          const summary = itemNames.length<=1 ? (itemNames[0]||'—') : `${itemNames[0]} +${itemNames.length-1} more`;
+          const bal = purchaseBalance(p);
+          return `<tr data-search="${itemNames.join(' ')}">
+            <td>${fmtDate(p.date)}</td><td>${supplierName(p)}</td><td>${summary}</td>
+            <td class="num">${fmt(purchaseTotal(p))}</td>
+            <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openPurchaseDetail('${p.id}')">Manage</button><button class="btn small danger" onclick="deletePurchaseConfirm('${p.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!purchases.length ? '<div class="empty-state">No purchases logged yet.</div>' : ''}
+    </div>`;
+}
+function supplierName(p){
+  if(p.supplier_id){ const sup = DB.suppliers.find(s=>s.id===p.supplier_id); return sup ? sup.name : '—'; }
+  return p.supplier_name || '—'; // legacy free-text purchases from before Suppliers existed
+}
+function deletePurchaseConfirm(id){ if(confirm('Delete this purchase and all its payments/returns?')){ DATA.api.deletePurchase(id); renderView(); } }
+
+let purchaseLineState = [];
+function openPurchaseModal(editId){
+  const editing = editId ? DB.purchases.find(p=>p.id===editId) : null;
+  if(!DB.suppliers.length){ alert('Add a Supplier first, under the Suppliers tab.'); return; }
+  if(!DB.items.length){ alert('Add an Item first, under the Items tab.'); return; }
+  purchaseLineState = editing ? JSON.parse(JSON.stringify(getLines(editing))) : [{item_id: DB.items[0].id, qty:'', unit_cost: DB.items[0].avg_cost||''}];
+  const supplierOpts = DB.suppliers.map(s=>`<option value="${s.id}" ${editing&&editing.supplier_id===s.id?'selected':''}>${s.name}</option>`).join('');
+  showModal(editing?'Edit Purchase':'New Purchase', `
+    <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Supplier</label><select id="f_supplier">${supplierOpts}</select></div></div>
+    <div class="section-title">Line Items<button class="btn small secondary" onclick="addPurchaseLine()">+ Add Item</button></div>
+    <div id="purchaseLineRows"></div>
+    <div class="balance-box"><span>Purchase Total</span><span class="amt" id="purchaseLineTotal">Rs. 0</span></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
+  `, () => {
+    const lines = purchaseLineState.filter(l=>l.item_id && l.qty);
+    if(!lines.length){ alert('Add at least one line item with a quantity.'); return; }
+    const fields = {date:val('f_date'), supplier_id:val('f_supplier'), lines, notes:val('f_notes')};
+    if(editId) DATA.api.updatePurchase(editId, fields); else DATA.api.createPurchase(fields);
+    closeModal(); renderView();
+  }, editing?{openInTab:`purchase/${editId}`}:{});
+  renderPurchaseLineRows();
+}
+function renderPurchaseLineRows(){
+  document.getElementById('purchaseLineRows').innerHTML = purchaseLineState.map((line,idx)=>{
+    const item = DB.items.find(i=>i.id===line.item_id);
+    const itemOpts = DB.items.map(i=>`<option value="${i.id}" ${line.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
+    return `<div class="bom-row">
+      <select onchange="onPurchaseLineItemChange(${idx}, this.value)">${itemOpts}</select>
+      <input type="number" step="0.0001" placeholder="Qty${item&&item.unit?' ('+item.unit+')':''}" value="${line.qty}" onchange="purchaseLineState[${idx}].qty=this.value; updatePurchaseLineTotal();">
+      <input type="number" step="0.0001" placeholder="Unit Cost" value="${line.unit_cost}" onchange="purchaseLineState[${idx}].unit_cost=this.value; updatePurchaseLineTotal();">
+      <button class="btn small danger" onclick="removePurchaseLine(${idx})">✕</button>
+    </div>`;
+  }).join('');
+  updatePurchaseLineTotal();
+}
+function addPurchaseLine(){
+  if(!DB.items.length){ alert('Add an Item first, under the Items tab.'); return; }
+  purchaseLineState.push({item_id: DB.items[0].id, qty:'', unit_cost: DB.items[0].avg_cost||''});
+  renderPurchaseLineRows();
+}
+function removePurchaseLine(idx){ if(purchaseLineState.length===1){ alert('A purchase needs at least one line item.'); return; } purchaseLineState.splice(idx,1); renderPurchaseLineRows(); }
+function onPurchaseLineItemChange(idx, itemId){
+  purchaseLineState[idx].item_id = itemId;
+  const item = DB.items.find(i=>i.id===itemId);
+  if(item && item.avg_cost) purchaseLineState[idx].unit_cost = round4(item.avg_cost);
+  renderPurchaseLineRows();
+}
+function updatePurchaseLineTotal(){
+  const total = purchaseLineState.reduce((s,l)=>s+(Number(l.qty)||0)*(Number(l.unit_cost)||0),0);
+  const el = document.getElementById('purchaseLineTotal');
+  if(el) el.textContent = fmt(total);
+}
+
+function openPurchaseDetail(id){
+  const p = DB.purchases.find(x=>x.id===id);
+  const lines = getLines(p);
+  const bal = purchaseBalance(p);
+  const lineItemOpts = lines.map(l=>{ const it=DB.items.find(i=>i.id===l.item_id); return `<option value="${l.item_id}">${it?it.name:'—'}</option>`; }).join('');
+  showModal('Purchase from ' + supplierName(p), `
+    <div class="balance-box"><span>Balance owed to supplier</span><span class="amt" style="color:${bal>0?'var(--bad)':'var(--good)'}">${fmt(bal)}</span></div>
+    <div class="subtable"><table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit Cost</th><th class="num">Line Total</th></tr></thead>
+    <tbody>${lines.map(l=>{ const it = DB.items.find(i=>i.id===l.item_id); return `<tr><td>${it?it.name:'—'}</td><td class="num">${l.qty} ${it?it.unit||'':''}</td><td class="num">${fmt(l.unit_cost)}</td><td class="num">${fmt(Number(l.qty)*Number(l.unit_cost))}</td></tr>`; }).join('')}</tbody></table></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 14px 0;">${fmtDate(p.date)} · Total ${fmt(purchaseTotal(p))}</p>
+    <div class="section-title">Edit Purchase<button class="btn small secondary" onclick="closeModal();openPurchaseModal('${id}')">Edit Details</button></div>
+
+    <div class="section-title">Payments to Supplier</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Reference</th></tr></thead>
+    <tbody>${(p.payments||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${fmt(x.amount)}</td><td>${x.method}</td><td class="muted">${x.reference||'—'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="padding:10px;">No payments yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Amount</label><input id="pay_amount" type="number" step="0.0001"></div>
+      <div class="form-row"><label>Method</label><select id="pay_method"><option value="cash">Cash</option><option value="bank transfer">Bank Transfer</option><option value="cheque">Cheque</option></select></div>
+      <div class="form-row"><label>Reference</label><input id="pay_ref" placeholder="optional"></div>
+      <button class="btn small" onclick="addPurchasePaymentNow('${id}')">+ Add Payment</button>
+    </div>
+
+    <div class="section-title">Returns to Supplier</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th>Item</th><th class="num">Qty</th><th>Reason</th><th class="num">Cost Impact</th></tr></thead>
+    <tbody>${(p.returns||[]).map(x=>{ const it=DB.items.find(i=>i.id===returnItemId(x,p)); return `<tr><td>${fmtDate(x.date)}</td><td>${it?it.name:'—'}</td><td class="num">${x.qty}</td><td>${x.reason}</td><td class="num">${fmt(x.cost_impact)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="muted" style="padding:10px;">No returns yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+      <div class="form-row"><label>Item</label><select id="ret_item">${lineItemOpts}</select></div>
+      <div class="form-row"><label>Qty</label><input id="ret_qty" type="number" step="0.0001"></div>
+      <div class="form-row"><label>Reason</label><input id="ret_reason" placeholder="e.g. damaged"></div>
+      <div class="form-row"><label>Cost Impact</label><input id="ret_cost" type="number" step="0.0001"></div>
+      <button class="btn small" onclick="addPurchaseReturnNow('${id}')">+ Add Return</button>
+    </div>
+  `, () => closeModal(), {openInTab: `purchase/${id}`});
+  document.querySelector('.modal-foot .btn:not(.secondary)').textContent = 'Done';
+}
+function addPurchasePaymentNow(id){
+  const amount = Number(val('pay_amount')); if(!amount){ alert('Enter an amount'); return; }
+  DATA.api.addPurchasePayment(id, {date: todayISO(), amount, method: val('pay_method'), reference: val('pay_ref')});
+  saveToStorage(); openPurchaseDetail(id);
+}
+function addPurchaseReturnNow(id){
+  const qty = Number(val('ret_qty')); if(!qty){ alert('Enter a quantity'); return; }
+  DATA.api.addPurchaseReturn(id, {date: todayISO(), item_id: val('ret_item'), qty, reason: val('ret_reason'), cost_impact: Number(val('ret_cost'))||0});
+  saveToStorage(); openPurchaseDetail(id); renderView();
+}
+
+/* ---------------- PRODUCTION ---------------- */
+function renderProduction(){
+  const batches = [...DATA.api.getBatches()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search batches..." oninput="filterTable(this.value,'batchTable')"><div class="spacer"></div><button class="btn" onclick="openBatchModal()">+ New Production Batch</button></div>
+    <div class="panel">
+      <table id="batchTable">
+        <thead><tr><th>Batch #</th><th>Date</th><th>Finished Good</th><th class="num">Qty</th><th class="num">Total Cost</th><th class="num">Unit Cost</th><th>Expiry</th><th>Flags</th><th></th></tr></thead>
+        <tbody>${batches.map(b=>{
+          const item = DB.items.find(i=>i.id===b.item_id);
+          return `<tr>
+            <td><strong>${b.batch_number}</strong></td><td>${fmtDate(b.date)}</td><td>${item?item.name:'—'}</td>
+            <td class="num">${b.qty_produced}</td><td class="num">${fmt(b.total_cost||0)}</td><td class="num">${fmt(b.unit_cost||0)}</td>
+            <td>${b.expiry_date?fmtDate(b.expiry_date):'—'}</td>
+            <td>${b.stock_override?'<span class="pill warn">Override used</span>':'<span class="pill good">Clean</span>'}</td>
+            <td><button class="btn small danger" onclick="deleteBatchConfirm('${b.id}')">Delete</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!batches.length ? '<div class="empty-state">No production batches yet.</div>' : ''}
+    </div>`;
+}
+function deleteBatchConfirm(id){ if(confirm('Delete this batch? This will affect availability calculations.')){ DATA.api.deleteBatch(id); renderView(); } }
+function openBatchModal(){
+  const finishedItems = DB.items.filter(i=>i.type==='finished');
+  if(!finishedItems.length){ alert('Add a Finished Good item with a BOM first, under Items.'); return; }
+  const opts = finishedItems.map(i=>`<option value="${i.id}">${i.name}</option>`).join('');
+  showModal('New Production Batch', `
+    <div id="batchWarnArea"></div>
+    <div class="form-grid"><div class="form-row"><label>Batch Number</label><input id="f_batchno" placeholder="e.g. WTP-0092"></div><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${todayISO()}"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Finished Good</label><select id="f_item">${opts}</select></div><div class="form-row"><label>Qty Produced</label><input id="f_qty" type="number" value="100"></div></div>
+    <div class="form-grid"><div class="form-row"><label>Packaging Cost</label><input id="f_pack" type="number" value="0"></div><div class="form-row"><label>Gas Cost</label><input id="f_gas" type="number" value="0"></div></div>
+    <div class="form-row"><label>Labor Cost</label><input id="f_labor" type="number" value="0"></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" placeholder="optional"></div>
+  `, () => attemptBatchSave(false));
+}
+function attemptBatchSave(override){
+  const batch = {batch_number:val('f_batchno'), date:val('f_date'), item_id:val('f_item'), qty_produced:Number(val('f_qty')), packaging_cost:Number(val('f_pack')), gas_cost:Number(val('f_gas')), labor_cost:Number(val('f_labor')), notes:val('f_notes'), override};
+  const result = DATA.api.createProductionBatch(batch);
+  if(!result.ok){
+    const lines = result.shortfalls.map(s=>{ const ing = DB.items.find(i=>i.id===s.ingredient_item_id); return `${ing.name}: need ${s.need.toFixed(1)} ${ing.unit||''}, have ${s.have.toFixed(1)} ${ing.unit||''}`; }).join('<br>');
+    document.getElementById('batchWarnArea').innerHTML = `<div class="warn-banner"><strong>Insufficient stock for this batch:</strong><br>${lines}<br><br><button class="btn small" onclick="attemptBatchSave(true)">Save Anyway (Override)</button></div>`;
+    return;
+  }
+  closeModal(); renderView();
+}
+
+/* ---------------- SALES ---------------- */
+
+/* ---------------- SALE FULL PAGE ---------------- */
+function renderSalePage(){
+  const hash = window.location.hash.slice(1);
+  const isNew = hash === 'sale-new';
+  const editId = isNew ? null : hash.replace('sale-edit/', '');
+  const editing = editId ? DB.sales.find(s=>s.id===editId) : null;
+
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ 
+    document.getElementById('content').innerHTML = '<div class="empty-state">Add a Simple or Finished Good item first, under Items.</div>';
+    return;
+  }
+
+  const shopOpts = DB.shops.filter(s=>s.status==='active').map(s=>`<option value="${s.id}" ${editing&&editing.shop_id===s.id?'selected':''}>${s.name}</option>`).join('');
+  saleLineState = editing ? JSON.parse(JSON.stringify(getLines(editing).map(l=>({item_id:l.item_id, entry_qty: l.entry_qty!==undefined?l.entry_qty:l.qty, entry_unit: l.entry_unit||'base', unit_price:l.unit_price})))) : [defaultSaleLine(sellableItems[0])];
+
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar">
+      <button class="btn secondary" onclick="window.location.hash=''; goTo('sales');">← Back to Sales</button>
+      <div class="spacer"></div>
+      <button class="btn" onclick="saveSalePage('${editId||''}')">${editing?'Update Sale':'Create Sale'}</button>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>${editing?'Edit Sale':'New Sale'}</h2></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div>
+          <div class="form-row"><label>Customer</label><select id="f_shop">${shopOpts}</select></div>
+        </div>
+        <div class="section-title">Line Items<button class="btn small secondary" onclick="addSaleLinePage()">+ Add Item</button></div>
+        <div id="saleLineRows"></div>
+        <div class="balance-box"><span>Sale Total</span><span class="amt" id="saleLineTotal">Rs. 0</span></div>
+        <div class="form-row"><label>Type</label><select id="f_type"><option value="consignment" ${editing&&editing.type==='consignment'?'selected':''}>Consignment</option><option value="direct_sale" ${editing&&editing.type==='direct_sale'?'selected':''}>Direct Sale</option></select></div>
+        <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
+      </div>
+    </div>`;
+  renderSaleLineRowsPage();
+}
+
+function renderSaleLineRowsPage(){
+  document.getElementById('saleLineRows').innerHTML = saleLineState.map((line,idx)=>{
+    const itemOpts = DB.items.filter(i=>i.type!=='non_inventory').map(i=>`<option value="${i.id}" ${line.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
+    const item = DB.items.find(i=>i.id===line.item_id);
+    const unitSelect = (item && item.alt_uom && item.alt_uom.factor) ? `<select onchange="saleLineState[${idx}].entry_unit=this.value; renderSaleLineRowsPage();">
+        <option value="base" ${line.entry_unit==='base'?'selected':''}>${item.unit||'base'}</option>
+        <option value="alt" ${line.entry_unit==='alt'?'selected':''}>${item.alt_uom.name}</option>
+      </select>` : `<input value="${item?item.unit||'':''}" disabled style="background:var(--panel-2);color:var(--text-faint);">`;
+    const subtotal = (Number(line.entry_qty)||0) * (Number(line.unit_price)||0);
+    return `<div class="bom-row" style="grid-template-columns:1.4fr 0.8fr 1fr 1fr 1fr auto;">
+      <select onchange="onSaleLineItemChange(${idx}, this.value)">${itemOpts}</select>
+      <input type="number" step="0.0001" placeholder="Qty" value="${line.entry_qty}" onblur="enforce4Dec(this)" onchange="saleLineState[${idx}].entry_qty=this.value; renderSaleLineRowsPage();">
+      ${unitSelect}
+      <input type="number" step="0.0001" placeholder="Unit Price" value="${line.unit_price}" onblur="enforce4Dec(this)" onchange="saleLineState[${idx}].unit_price=this.value; renderSaleLineRowsPage();">
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);text-align:right;align-self:center;padding:10px 14px;background:var(--panel-3);border-radius:var(--radius-sm);height:42px;display:flex;align-items:center;justify-content:flex-end;">${fmt(subtotal)}</div>
+      <button class="btn small danger" onclick="removeSaleLinePage(${idx})">✕</button>
+    </div>`;
+  }).join('');
+  const total = saleLineState.reduce((s,l)=>s+(Number(l.entry_qty)||0)*(Number(l.unit_price)||0),0);
+  const el = document.getElementById('saleLineTotal');
+  if(el) el.textContent = fmt(total);
+}
+
+function addSaleLinePage(){
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ alert('Add a Simple or Finished Good item first, under Items.'); return; }
+  saleLineState.push(defaultSaleLine(sellableItems[0]));
+  renderSaleLineRowsPage();
+}
+
+function removeSaleLinePage(idx){
+  if(saleLineState.length===1){ alert('A sale needs at least one line item.'); return; }
+  saleLineState.splice(idx,1);
+  renderSaleLineRowsPage();
+}
+
+function saveSalePage(editId){
+  const lines = saleLineState.filter(l=>l.item_id && l.entry_qty).map(l=>{
+    const item = DB.items.find(i=>i.id===l.item_id);
+    const baseQty = (item && item.alt_uom && l.entry_unit==='alt') ? Number(l.entry_qty)*Number(item.alt_uom.factor) : Number(l.entry_qty);
+    return {item_id:l.item_id, qty: baseQty, entry_qty: Number(l.entry_qty), entry_unit: l.entry_unit, unit_price: Number(l.unit_price)||0};
+  });
+  if(!lines.length){ alert('Add at least one line item with a quantity.'); return; }
+  const fields = {date:val('f_date'), shop_id:val('f_shop'), lines, type:val('f_type'), notes:val('f_notes')};
+  if(editId) DATA.api.updateSale(editId, fields); else DATA.api.createSale(fields);
+  saveToStorage();
+  window.location.hash = '';
+  goTo('sales');
+}
+
+function renderSales(){
+  const sales = [...DATA.api.getSales()].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search sales..." oninput="filterTable(this.value,'salesTable')"><div class="spacer"></div><button class="btn" onclick="window.location.hash='sale-new'; renderSalePage();">+ New Sale</button></div>
+    <div class="panel">
+      <table id="salesTable">
+        <thead><tr><th>Date</th><th>Customer</th><th>Items</th><th>Type</th><th class="num">Total</th><th class="num">Balance Due</th><th></th></tr></thead>
+        <tbody>${sales.map(s=>{
+          const shop = DB.shops.find(sh=>sh.id===s.shop_id);
+          const lines = getLines(s);
+          const itemNames = lines.map(l=>{ const it = DB.items.find(i=>i.id===l.item_id); return it?it.name:'—'; });
+          const summary = itemNames.length<=1 ? (itemNames[0]||'—') : `${itemNames[0]} +${itemNames.length-1} more`;
+          const bal = saleBalance(s);
+          return `<tr data-search="${itemNames.join(' ')}">
+            <td>${fmtDate(s.date)}</td><td>${shop?shop.name:'—'}</td><td>${summary}</td>
+            <td><span class="pill ${s.type==='consignment'?'warn':'good'}">${(s.type||'').replace('_',' ')}</span></td>
+            <td class="num">${fmt(saleTotal(s))}</td>
+            <td class="num"><span class="pill ${bal>0?'bad':'good'}">${fmt(bal)}</span></td>
+            <td><div class="row-actions"><button class="btn small secondary" onclick="openSaleDetail('${s.id}')">Manage</button><button class="btn small danger" onclick="deleteSaleConfirm('${s.id}')">Delete</button></div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!sales.length ? '<div class="empty-state">No sales logged yet.</div>' : ''}
+    </div>`;
+}
+function deleteSaleConfirm(id){ if(confirm('Delete this sale and all its payments/returns?')){ DATA.api.deleteSale(id); renderView(); } }
+
+let saleLineState = [];
+function defaultSaleLine(item){
+  if(!item) return {item_id:'', entry_qty:'', entry_unit:'base', unit_price:''};
+  return {
+    item_id: item.id,
+    entry_qty: '',
+    entry_unit: (item.alt_uom && item.alt_uom.factor) ? 'alt' : 'base',
+    unit_price: (item.price_tiers && item.price_tiers.length) ? item.price_tiers[0].price : ''
+  };
+}
+function openSaleModal(editId){
+  const editing = editId ? DB.sales.find(s=>s.id===editId) : null;
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ alert('Add a Simple or Finished Good item first, under Items.'); return; }
+  const shopOpts = DB.shops.filter(s=>s.status==='active').map(s=>`<option value="${s.id}" ${editing&&editing.shop_id===s.id?'selected':''}>${s.name}</option>`).join('');
+  saleLineState = editing ? JSON.parse(JSON.stringify(getLines(editing).map(l=>({item_id:l.item_id, entry_qty: l.entry_qty!==undefined?l.entry_qty:l.qty, entry_unit: l.entry_unit||'base', unit_price:l.unit_price})))) : [defaultSaleLine(sellableItems[0])];
+  showModal(editing?'Edit Sale':'New Sale', `
+    <div class="form-grid"><div class="form-row"><label>Date</label><input id="f_date" type="date" value="${editing?editing.date:todayISO()}"></div><div class="form-row"><label>Customer</label><select id="f_shop">${shopOpts}</select></div></div>
+    <div class="section-title">Line Items<button class="btn small secondary" onclick="addSaleLine()">+ Add Item</button></div>
+    <div id="saleLineRows"></div>
+    <div class="balance-box"><span>Sale Total</span><span class="amt" id="saleLineTotal">Rs. 0</span></div>
+    <div class="form-row"><label>Type</label><select id="f_type"><option value="consignment" ${editing&&editing.type==='consignment'?'selected':''}>Consignment</option><option value="direct_sale" ${editing&&editing.type==='direct_sale'?'selected':''}>Direct Sale</option></select></div>
+    <div class="form-row"><label>Notes</label><input id="f_notes" value="${editing?editing.notes||'':''}" placeholder="optional"></div>
+  `, () => {
+    const lines = saleLineState.filter(l=>l.item_id && l.entry_qty).map(l=>{
+      const item = DB.items.find(i=>i.id===l.item_id);
+      const baseQty = (item && item.alt_uom && l.entry_unit==='alt') ? Number(l.entry_qty)*Number(item.alt_uom.factor) : Number(l.entry_qty);
+      return {item_id:l.item_id, qty: baseQty, entry_qty: Number(l.entry_qty), entry_unit: l.entry_unit, unit_price: Number(l.unit_price)||0};
+    });
+    if(!lines.length){ alert('Add at least one line item with a quantity.'); return; }
+    const fields = {date:val('f_date'), shop_id:val('f_shop'), lines, type:val('f_type'), notes:val('f_notes')};
+    if(editId) DATA.api.updateSale(editId, fields); else DATA.api.createSale(fields);
+    closeModal(); renderView();
+  }, editing?{openInTab:`sale/${editId}`}:{});
+  renderSaleLineRows();
+}
+function renderSaleLineRows(){
+  document.getElementById('saleLineRows').innerHTML = saleLineState.map((line,idx)=>{
+    const itemOpts = DB.items.filter(i=>i.type!=='non_inventory').map(i=>`<option value="${i.id}" ${line.item_id===i.id?'selected':''}>${i.name}</option>`).join('');
+    const item = DB.items.find(i=>i.id===line.item_id);
+    const unitSelect = (item && item.alt_uom && item.alt_uom.factor) ? `<select onchange="saleLineState[${idx}].entry_unit=this.value; renderSaleLineRows();">
+        <option value="base" ${line.entry_unit==='base'?'selected':''}>${item.unit||'base'}</option>
+        <option value="alt" ${line.entry_unit==='alt'?'selected':''}>${item.alt_uom.name}</option>
+      </select>` : `<input value="${item?item.unit||'':''}" disabled style="background:var(--panel-2);color:var(--text-faint);">`;
+    const subtotal = (Number(line.entry_qty)||0) * (Number(line.unit_price)||0);
+    return `<div class="bom-row" style="grid-template-columns:1.3fr 0.7fr 0.9fr 0.9fr 0.8fr auto;">
+      <select onchange="onSaleLineItemChange(${idx}, this.value)">${itemOpts}</select>
+      <input type="number" step="0.0001" placeholder="Qty" value="${line.entry_qty}" onchange="saleLineState[${idx}].entry_qty=this.value; renderSaleLineRows();">
+      ${unitSelect}
+      <input type="number" step="0.0001" placeholder="Unit Price" value="${line.unit_price}" onchange="saleLineState[${idx}].unit_price=this.value; renderSaleLineRows();">
+      <div class="muted" style="font-family:var(--font-mono);font-size:11.5px;align-self:center;">${fmt(subtotal)}</div>
+      <button class="btn small danger" onclick="removeSaleLine(${idx})">✕</button>
+    </div>`;
+  }).join('');
+  const total = saleLineState.reduce((s,l)=>s+(Number(l.entry_qty)||0)*(Number(l.unit_price)||0),0);
+  const el = document.getElementById('saleLineTotal');
+  if(el) el.textContent = fmt(total);
+}
+function addSaleLine(){
+  const sellableItems = DB.items.filter(i=>i.type!=='non_inventory');
+  if(!sellableItems.length){ alert('Add a Simple or Finished Good item first, under Items.'); return; }
+  saleLineState.push(defaultSaleLine(sellableItems[0]));
+  renderSaleLineRows();
+}
+function removeSaleLine(idx){ if(saleLineState.length===1){ alert('A sale needs at least one line item.'); return; } saleLineState.splice(idx,1); renderSaleLineRows(); }
+function onSaleLineItemChange(idx, itemId){
+  saleLineState[idx].item_id = itemId;
+  const item = DB.items.find(i=>i.id===itemId);
+  saleLineState[idx].entry_unit = (item && item.alt_uom && item.alt_uom.factor) ? 'alt' : 'base';
+  if(item && item.price_tiers && item.price_tiers.length){ saleLineState[idx].unit_price = round4(item.price_tiers[0].price); }
+  else if(item && item.avg_cost){ saleLineState[idx].unit_price = round4(item.avg_cost * 1.3); }
+  renderSaleLineRows();
+}
+
+function openSaleDetail(id){
+  const s = DB.sales.find(x=>x.id===id);
+  const shop = DB.shops.find(sh=>sh.id===s.shop_id);
+  const lines = getLines(s);
+  const bal = saleBalance(s);
+  const lineItemOpts = lines.map(l=>{ const it=DB.items.find(i=>i.id===l.item_id); return `<option value="${l.item_id}">${it?it.name:'—'}</option>`; }).join('');
+  showModal('Sale to ' + (shop?shop.name:''), `
+    <div class="balance-box"><span>Balance due from customer</span><span class="amt" style="color:${bal>0?'var(--bad)':'var(--good)'}">${fmt(bal)}</span></div>
+    <div class="subtable"><table><thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Line Total</th></tr></thead>
+    <tbody>${lines.map(l=>{ const it = DB.items.find(i=>i.id===l.item_id); const qtyDisplay = (l.entry_unit==='alt' && it && it.alt_uom) ? `${l.entry_qty} ${it.alt_uom.name}` : `${l.qty} ${it?it.unit||'':''}`; return `<tr><td>${it?it.name:'—'}</td><td class="num">${qtyDisplay}</td><td class="num">${fmt(l.unit_price)}</td><td class="num">${fmt(Number(l.qty)*Number(l.unit_price))}</td></tr>`; }).join('')}</tbody></table></div>
+    <p class="muted" style="font-size:12px;margin:8px 0 14px 0;">${fmtDate(s.date)} · Total ${fmt(saleTotal(s))} · <span class="pill ${s.type==='consignment'?'warn':'good'}">${(s.type||'').replace('_',' ')}</span></p>
+    <div class="section-title">Edit Sale<button class="btn small secondary" onclick="closeModal();openSaleModal('${id}')">Edit Details</button></div>
+
+    <div class="section-title">Payments from Customer</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th class="num">Amount</th><th>Method</th><th>Reference</th></tr></thead>
+    <tbody>${(s.payments||[]).map(x=>`<tr><td>${fmtDate(x.date)}</td><td class="num">${fmt(x.amount)}</td><td>${x.method}</td><td class="muted">${x.reference||'—'}</td></tr>`).join('') || '<tr><td colspan="4" class="muted" style="padding:10px;">No payments yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form">
+      <div class="form-row"><label>Amount</label><input id="pay_amount" type="number" step="0.0001"></div>
+      <div class="form-row"><label>Method</label><select id="pay_method"><option value="cash">Cash</option><option value="bank transfer">Bank Transfer</option><option value="cheque">Cheque</option></select></div>
+      <div class="form-row"><label>Reference</label><input id="pay_ref" placeholder="optional"></div>
+      <button class="btn small" onclick="addSalePaymentNow('${id}')">+ Add Payment</button>
+    </div>
+
+    <div class="section-title">Returns / Restock</div>
+    <div class="subtable"><table><thead><tr><th>Date</th><th>Item</th><th class="num">Qty</th><th>Reason</th><th class="num">Cost Impact</th><th>Restocked?</th></tr></thead>
+    <tbody>${(s.returns||[]).map(x=>{ const it=DB.items.find(i=>i.id===returnItemId(x,s)); return `<tr><td>${fmtDate(x.date)}</td><td>${it?it.name:'—'}</td><td class="num">${x.qty}</td><td>${x.reason}</td><td class="num">${fmt(x.cost_impact)}</td><td>${x.restock?'Yes':'No'}</td></tr>`; }).join('') || '<tr><td colspan="6" class="muted" style="padding:10px;">No returns yet.</td></tr>'}</tbody></table></div>
+    <div class="mini-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+      <div class="form-row"><label>Item</label><select id="ret_item">${lineItemOpts}</select></div>
+      <div class="form-row"><label>Qty</label><input id="ret_qty" type="number" step="0.0001"></div>
+      <div class="form-row"><label>Reason</label><input id="ret_reason" placeholder="e.g. expired"></div>
+      <div class="form-row"><label>Cost Impact</label><input id="ret_cost" type="number" step="0.0001"></div>
+      <button class="btn small" onclick="addSaleReturnNow('${id}')">+ Add Return</button>
+    </div>
+    <div class="form-row"><label><input type="checkbox" id="ret_restock" style="width:auto;display:inline;margin-right:6px;">Restock this quantity back into Availability</label></div>
+  `, () => closeModal(), {openInTab: `sale/${id}`});
+  document.querySelector('.modal-foot .btn:not(.secondary)').textContent = 'Done';
+}
+function addSalePaymentNow(id){
+  const amount = Number(val('pay_amount')); if(!amount){ alert('Enter an amount'); return; }
+  DATA.api.addSalePayment(id, {date: todayISO(), amount, method: val('pay_method'), reference: val('pay_ref')});
+  saveToStorage(); openSaleDetail(id);
+}
+function addSaleReturnNow(id){
+  const qty = Number(val('ret_qty')); if(!qty){ alert('Enter a quantity'); return; }
+  const restock = document.getElementById('ret_restock').checked;
+  DATA.api.addSaleReturn(id, {date: todayISO(), item_id: val('ret_item'), qty, reason: val('ret_reason'), cost_impact: Number(val('ret_cost'))||0, restock});
+  saveToStorage(); openSaleDetail(id); renderView();
+}
+
+/* ---------------- AVAILABILITY ---------------- */
+function renderAvailability(){
+  const items = DATA.api.getItems().filter(i=>i.type!=='non_inventory');
+  document.getElementById('content').innerHTML = `
+    <div class="toolbar"><input type="text" placeholder="Search..." oninput="filterTable(this.value,'availTable')"></div>
+    <div class="panel">
+      <table id="availTable">
+        <thead><tr><th>Item</th><th>Type</th><th class="num">Purchased</th><th class="num">Produced</th><th class="num">Sold</th><th class="num">Returned/Restocked</th><th class="num">Current Stock</th><th>Status</th></tr></thead>
+        <tbody>${items.map(i=>{
+          const purchased = DB.purchases.reduce((s,p)=>s+getLines(p).filter(l=>l.item_id===i.id).reduce((a,l)=>a+Number(l.qty),0),0);
+          const produced = DB.production_batches.filter(b=>b.item_id===i.id).reduce((s,b)=>s+Number(b.qty_produced),0);
+          const sold = DB.sales.reduce((s,x)=>s+getLines(x).filter(l=>l.item_id===i.id).reduce((a,l)=>a+Number(l.qty),0),0);
+          const restocked = DB.sales.reduce((s,x)=>s+(x.returns||[]).filter(r=>returnItemId(r,x)===i.id && r.restock).reduce((a,r)=>a+Number(r.qty),0),0);
+          const stock = stockOf(i.id);
+          const low = i.min_stock && stock < Number(i.min_stock);
+          return `<tr>
+            <td><strong>${i.name}</strong></td><td><span class="pill ${i.type==='finished'?'good':'neutral'}">${i.type==='finished'?'Finished Good':'Simple'}</span></td>
+            <td class="num">${purchased}</td><td class="num">${produced}</td><td class="num">${sold}</td><td class="num">${restocked}</td>
+            <td class="num"><strong>${stock} ${i.unit||''}</strong></td>
+            <td><span class="pill ${low?'bad':'good'}">${low?'Low Stock':'OK'}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+      ${!items.length ? '<div class="empty-state">No items to track yet.</div>' : ''}
+    </div>`;
+}
+
+/* ---------------- REPORTS ---------------- */
+function renderReports(){
+  document.getElementById('content').innerHTML = `
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><h2>Cash Flow</h2><div class="sub">Payments received vs paid out</div></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartCashFlow"></canvas></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Sales by Item</h2></div><div class="panel-body"><div class="chart-wrap"><canvas id="chartProductPerf"></canvas></div></div></div>
+    </div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><h2>Retail Performance</h2><div class="sub">Revenue by shop, ranked</div></div><div class="panel-body" id="retailPerf"></div></div>
+      <div class="panel"><div class="panel-head"><h2>Outstanding Balances</h2></div><div class="panel-body" id="agingTable"></div></div>
+    </div>
+    <div class="panel"><div class="panel-head"><h2>Expiry Forecast</h2></div><div class="panel-body" id="expiryForecast"></div></div>`;
+
+  const sales = DATA.api.getSales(); const purchases = DATA.api.getPurchases();
+  const cashIn = sales.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  const cashOut = purchases.reduce((s,x)=>s+(x.payments||[]).reduce((a,p)=>a+Number(p.amount),0),0);
+  new Chart(document.getElementById('chartCashFlow'), {type:'bar', data:{labels:['Inflow (Payments In)','Outflow (Payments Out)'], datasets:[{data:[cashIn,cashOut], backgroundColor:['#268a4e','#c4422e'], borderRadius:3}]}, options:{plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#5b6170'},grid:{display:false}}, y:{ticks:{color:'#5b6170'},grid:{color:'#eceef2'}}}}});
+
+  const byItem = {}; sales.forEach(s=>{ getLines(s).forEach(l=>{ byItem[l.item_id] = (byItem[l.item_id]||0)+Number(l.qty); }); });
+  const items = DATA.api.getItems();
+  new Chart(document.getElementById('chartProductPerf'), {type:'doughnut', data:{labels:Object.keys(byItem).map(id=>{const it=items.find(i=>i.id===id); return it?it.name:'—';}), datasets:[{data:Object.values(byItem), backgroundColor:['#c97a2e','#e8923f','#268a4e','#3a7ea0','#b8841a']}]}, options:{plugins:{legend:{labels:{color:'#1f2430',font:{size:11}}}}}});
+
+  const shops = DATA.api.getShops();
+  const revByShop = shops.map(s=>({name:s.name, rev: sales.filter(x=>x.shop_id===s.id).reduce((sum,x)=>sum+saleTotal(x),0)})).sort((a,b)=>b.rev-a.rev);
+  document.getElementById('retailPerf').innerHTML = `<table><thead><tr><th>Rank</th><th>Shop</th><th class="num">Revenue</th></tr></thead><tbody>${revByShop.map((r,i)=>`<tr><td class="muted">#${i+1}</td><td>${r.name}</td><td class="num">${fmt(r.rev)}</td></tr>`).join('') || '<tr><td colspan="3" class="muted" style="padding:10px;">No sales yet.</td></tr>'}</tbody></table>`;
+
+  document.getElementById('agingTable').innerHTML = `<table><thead><tr><th>Shop</th><th class="num">Balance</th><th>Status</th></tr></thead><tbody>${shops.map(s=>{ const bal = shopBalance(s.id); return `<tr><td>${s.name}</td><td class="num">${fmt(bal)}</td><td><span class="pill ${bal>3000?'bad':bal>0?'warn':'good'}">${bal>0?'Outstanding':'Settled'}</span></td></tr>`; }).join('') || '<tr><td colspan="3" class="muted" style="padding:10px;">No shops yet.</td></tr>'}</tbody></table>`;
+
+  const batches = DATA.api.getBatches().filter(b=>b.expiry_date);
+  document.getElementById('expiryForecast').innerHTML = `<table><thead><tr><th>Batch</th><th>Item</th><th>Expiry Date</th><th class="num">Days Left</th><th>Risk</th></tr></thead><tbody>${batches.map(b=>{ const item = items.find(i=>i.id===b.item_id); const days = Math.ceil((new Date(b.expiry_date)-new Date())/86400000); const risk = days<=3?'bad':days<=7?'warn':days<=14?'neutral':'good'; const label = days<=3?'High':days<=7?'Medium':days<=14?'Watch':'Low'; return `<tr><td>${b.batch_number}</td><td>${item?item.name:'—'}</td><td>${fmtDate(b.expiry_date)}</td><td class="num">${days}</td><td><span class="pill ${risk}">${label}</span></td></tr>`; }).join('') || '<tr><td colspan="5" class="muted" style="padding:10px;">No batches with expiry tracking.</td></tr>'}</tbody></table>`;
+}
+
+/* ---------------- SETTINGS ---------------- */
+function renderSettings(){
+  document.getElementById('content').innerHTML = `
+    <div class="panel">
+      <div class="panel-head"><h2>Backup &amp; Migration</h2><div class="sub">Your data is stored only in this browser. Export regularly.</div></div>
+      <div class="panel-body">
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">Data is saved to this browser's local storage only. Export a backup file regularly and use Import to restore it here or migrate to a future backend.</p>
+        <button class="btn" onclick="exportData()">⬇ Export All Data (.json)</button>
+        <button class="btn secondary" onclick="document.getElementById('importFile').click()">⬆ Import Data (.json)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <div style="margin-top:14px;"><button class="btn danger small" onclick="clearAllData()">Clear All Data</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Users &amp; Roles</h2></div>
+      <div class="panel-body"><table><thead><tr><th>Role</th><th>Module Access</th></tr></thead><tbody>${Object.entries(ROLES).map(([k,r])=>`<tr><td><strong>${r.label}</strong></td><td class="muted">${r.modules.join(', ')}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+    <p class="muted" style="font-size:11.5px;">Backend: browser-only (local storage). To move to Google Sheets, the DATA.api layer in this file is the single swap point.</p>`;
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `malan-makanan-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      const requiredKeys = ['items','shops','purchases','sales','production_batches'];
+      if(!requiredKeys.every(k=>Array.isArray(parsed[k]))){ alert('This file does not match the expected backup format.'); return; }
+      if(!Array.isArray(parsed.suppliers)) parsed.suppliers = []; // backups from before Suppliers existed
+      DB = parsed; saveToStorage(); renderView(); alert('Data imported successfully.');
+    }catch(err){ alert('Could not read this file.'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+function clearAllData(){
+  if(!confirm('This will permanently erase all data in this browser. Export a backup first if you need one. Continue?')) return;
+  DB = {items:[], shops:[], suppliers:[], purchases:[], sales:[], production_batches:[]};
+  saveToStorage(); renderView();
+}
+
+/* ---------------- MODAL HELPERS ---------------- */
+function showModal(title, bodyHtml, onSave, opts={}){
+  const openInTab = opts.openInTab ? `<button class="btn ghost small" onclick="openModalInTab('${opts.openInTab}')" title="Open in new tab">↗</button>` : '';
+  document.getElementById('modalBox').innerHTML = `
+    <div class="modal-head"><h3>${title}</h3><div style="display:flex;align-items:center;gap:8px;">${openInTab}<span class="modal-close" onclick="closeModal()">✕</span></div></div>
+    <div class="modal-body">${bodyHtml}</div>
+    <div class="modal-foot"><button class="btn secondary" onclick="closeModal()">Cancel</button><button class="btn" id="modalSaveBtn">Save</button></div>`;
+  document.getElementById('modalSaveBtn').onclick = onSave;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalBox').classList.remove('closing');
+}
+function openModalInTab(hash){
+  const base = window.location.href.split('#')[0];
+  window.open(base + '#' + hash, '_blank');
+}
+function closeModal(){
+  const modal = document.getElementById('modalBox');
+  const overlay = document.getElementById('modalOverlay');
+  modal.classList.add('closing');
+  overlay.style.opacity = '0';
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    modal.classList.remove('closing');
+    overlay.style.opacity = '';
+  }, 350);
+}
+function val(id){ const el = document.getElementById(id); return el ? el.value : ''; }
+function filterTable(query, tableId){
+  const q = query.toLowerCase();
+  document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr=>{ tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+}
+
+/* ---------------- INIT ---------------- */
+renderNav();
+renderView();
+handleHashRoute();
+
+</script>
+</body>
+</html>
